@@ -1,0 +1,17 @@
+# Composer
+/vendor/
+/app/vendor/
+
+# Runtime data
+/var/
+
+# Tools
+/.phpunit.cache/
+/.php-cs-fixer.cache
+
+# Editors and operating systems
+/.idea/
+/.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
