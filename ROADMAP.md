@@ -15,8 +15,8 @@ Status: **Accepted** = agreed and binding; **Proposed** = current plan, open to 
 | 2026-11-07 | Content | Markdown with YAML front matter in the MVP. HTML input later; Markdown stays the default. | Accepted |
 | 2026-11-07 | Presentation | Bootstrap 5 (12-column grid) and Twig templates. One simple built-in theme in the first version. | Accepted |
 | 2026-11-07 | Architecture | The command interpreter is the only write path, for the admin UI, the CLI and the AI module alike. | Accepted |
-| 2026-11-07 | Commands | `<noun> <verb>` syntax with English keywords and `--key=value` options. | Proposed |
-| 2026-11-07 | Commands | Batches are all-or-nothing: every line is validated before anything is written. | Proposed |
+| 2026-11-07 | Commands | `<noun> <verb>` syntax with English keywords and `--key=value` options. | Accepted |
+| 2026-11-07 | Commands | Batches are all-or-nothing: every line is validated before anything is written. | Accepted |
 | 2026-11-07 | Publishing | On-demand static generation: the first request renders and stores a page, later requests get the static file. | Accepted |
 | 2026-11-07 | URLs | URLs are never generated automatically. Every page gets a numeric id and is available at `/node/<id>`; an optional ASCII-only alias (e.g. `/about`) can be set by the admin. | Accepted |
 | 2026-11-07 | Multilingual | Admin messages are translatable (each admin chooses a locale, English is the fallback) and websites can be multilingual. Language-dependent fields are stored per language from the MVP on; details come later. | Accepted |
@@ -28,6 +28,9 @@ Status: **Accepted** = agreed and binding; **Proposed** = current plan, open to 
 | 2026-11-07 | URLs | If a page has an alias, `/node/<id>` answers with an HTTP 301 redirect to the alias. | Accepted |
 | 2026-11-07 | URLs | The page served at `/` is set with `front_page` in `site.yaml`; an alias cannot be `/`. | Accepted |
 | 2026-11-07 | URLs | Aliases may not start with `admin`, `assets`, `node` or an enabled language code, which are kept free for language prefixes. Aliases are unique per language. | Accepted |
+| 2026-11-07 | Data model | Region names `name` and `title` and the column name `container` are reserved, so that paths such as `layout.default.body.main.width` stay unambiguous. | Accepted |
+| 2026-11-07 | Commands | A batch is rejected only by violations it introduces; problems that already existed (e.g. from hand-edited files) never block unrelated changes. | Accepted |
+| 2026-11-07 | Commands | Responses carry a stable message key and parameters; the text comes from a per-locale catalogue with English fallback. JSON output exposes both, for the dashboard and the AI module. | Accepted |
 | 2026-11-07 | URLs | When an alias changes, the old alias redirects (301) to the page's current alias, until another page takes the old alias. Redirects point to page ids, so renaming twice never creates a chain. | Accepted |
 
 ## MVP (0.1.0)
@@ -35,8 +38,8 @@ Status: **Accepted** = agreed and binding; **Proposed** = current plan, open to 
 Built from the inside out: storage and command interpreter first, user interface last. From milestone 2 on, a developer CLI (`bin/campanella`) runs the same interpreter, so everything can be tested without a browser.
 
 - [x] **M1 – Skeleton and storage:** Composer project, directory layout, YAML/Markdown read and write (atomic, locked), entity classes, validator, PHPUnit tests, CI.
-- [ ] **M2 – Command interpreter:** lexer and parser, command registry, `get` / `set` / `list` / `help`, batch transactions, `@dry-run`, text and JSON responses, message catalogue (English).
-- [ ] **M3 – Entity commands:** `page`, `content`, `layout`, `menu` commands and `check`.
+- [x] **M2 – Command interpreter:** lexer and parser, command registry, `get` / `set` / `list` / `help`, batch transactions, `@dry-run`, text and JSON responses, message catalogue (English).
+- [ ] **M3 – Entity commands:** `page`, `content`, `layout`, `menu` and `language` commands and `check`.
 - [ ] **M4 – Generator:** default Bootstrap 5 theme in Twig, front controller, `.htaccess`, cache manifest, alias redirects, `build`, `cache clear`.
 - [ ] **M5 – Admin dashboard:** login, command box, response box, command history, status bar.
 - [ ] **M6 – Finishing:** command log, `undo`, installer, starter project with example pages, command language reference, committed `composer.lock`.

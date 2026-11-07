@@ -24,3 +24,10 @@ Added, Changed, Deprecated, Removed, Fixed, Security.
 - Project validator with stable violation codes for names, references, layout widths, aliases and languages.
 - PHPUnit test suite, PHPStan analysis at level 8, and a GitHub Actions workflow for PHP 8.3, 8.4 and 8.5.
 - Developer documentation: architecture, data model, development guide.
+- Command language parser: quoted words with escapes, `--options`, multi-line `<<<` … `>>>` text, comments, the `@dry-run` directive, and syntax errors with line numbers.
+- Command interpreter that runs a batch all or nothing under the write lock, validates the result, and writes only the entities that really changed. Problems that existed before a batch do not block it.
+- Commands `get`, `set`, `list` and `help`, with dotted paths for every entity (`page./about.title.hu`, `layout.default.body.main.width`, `menu.main.items.2.label`).
+- Translatable message catalogue (`app/translations/messages.en.yaml`) with English texts for every response and validation rule.
+- Text and JSON output; JSON responses carry stable message keys and parameters next to the text.
+- Developer CLI `bin/campanella` (`-e`, file or standard input, `--dry-run`, `--json`, `--locale`, `--root`).
+- Command language reference: `docs/command-language.md`.

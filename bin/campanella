@@ -1,0 +1,14 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Campanella\Lite\Cli\CliApplication;
+
+if (PHP_SAPI !== 'cli') {
+    exit(1);
+}
+
+require dirname(__DIR__) . '/app/vendor/autoload.php';
+
+exit((new CliApplication(dirname(__DIR__), STDIN, STDOUT, STDERR))->run($argv));

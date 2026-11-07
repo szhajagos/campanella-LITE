@@ -3,7 +3,14 @@
     "description": "A lightweight, file-based, command-driven CMS that publishes static websites.",
     "type": "project",
     "license": "MIT",
-    "keywords": ["cms", "static-site", "flat-file", "command-line", "bootstrap", "twig"],
+    "keywords": [
+        "cms",
+        "static-site",
+        "flat-file",
+        "command-line",
+        "bootstrap",
+        "twig"
+    ],
     "homepage": "https://github.com/szhajagos/campanella-LITE",
     "authors": [
         {
@@ -13,6 +20,7 @@
     ],
     "require": {
         "php": ">=8.3",
+        "ext-mbstring": "*",
         "symfony/yaml": "^7.4"
     },
     "require-dev": {
@@ -43,5 +51,8 @@
             "@analyse",
             "@test"
         ]
-    }
+    },
+    "bin": [
+        "bin/campanella"
+    ]
 }

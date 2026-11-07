@@ -37,7 +37,7 @@ final class ContentTranslation
     }
 
     /**
-     * @return array<string, string>
+     * @return array{title: string, format: string}
      */
     public function frontMatter(): array
     {

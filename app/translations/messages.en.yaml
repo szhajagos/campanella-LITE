@@ -1,0 +1,112 @@
+# Campanella Lite – English message catalogue.
+#
+# Keys are stable identifiers; {placeholders} are replaced with values.
+# To translate, copy this file to messages.{locale}.yaml and translate the
+# texts. Missing keys fall back to English.
+
+# Line and batch labels
+format.ok: "Ok."
+format.error: "Error:"
+format.violations: "The changes would break these rules:"
+line.skipped: "Skipped: an earlier line failed."
+
+# Batch summaries
+batch.empty: "Nothing to do: the batch has no commands."
+batch.rejected: "Batch not executed, nothing was changed."
+batch.unchanged: "Done. Nothing was changed."
+batch.invalid: "Batch not executed, nothing was changed."
+batch.dry_run: "Dry run, nothing was changed. Files that would change ({count}): {files}"
+batch.applied: "Done. Files changed ({count}): {files}"
+batch.project_unreadable: "The project files could not be read: {detail}"
+
+# Syntax errors
+syntax.unclosed_quote: "A quoted text is not closed with \"."
+syntax.unclosed_text: "The text started with <<< is not closed with a >>> line."
+syntax.unexpected_text_end: "A >>> line without a text started with <<<."
+syntax.unknown_directive: "Unknown directive @{directive}. Available: @dry-run."
+syntax.directive_after_command: "The directive @{directive} must come before the first command."
+syntax.invalid_option: "Invalid option name {option}. Option names use lowercase letters, digits and hyphens."
+syntax.duplicate_option: "The option {option} is given twice."
+syntax.missing_command: "The line has options but no command."
+
+# Command errors
+command.unknown: "Unknown command: {command}. Type \"help\" for the list of commands."
+command.unknown_with_suggestion: "Unknown command: {command}. Did you mean \"{suggestion}\"?"
+command.missing_argument: "Missing argument <{argument}>. Usage: {usage}"
+command.too_many_arguments: "Unexpected argument \"{argument}\". Put text with spaces in quotes. Usage: {usage}"
+command.unknown_option: "Unknown option {option}. Usage: {usage}"
+command.option_needs_value: "The option {option} needs a value, e.g. {option}=value. Usage: {usage}"
+command.option_takes_no_value: "The option {option} takes no value. Usage: {usage}"
+command.text_not_accepted: "This command takes no <<< text >>>. Usage: {usage}"
+command.text_required: "This command needs a text between <<< and >>>. Usage: {usage}"
+
+# Paths and values
+path.invalid: "Invalid path: {path}"
+path.incomplete: "Incomplete path: {path}. Add a name or id, e.g. page.2 or layout.default."
+path.unknown: "Nothing at {path}."
+path.unknown_root: "Unknown path root \"{root}\". Paths start with one of: {roots}."
+path.not_settable: "{path} cannot be changed with \"set\". See \"help set\"."
+value.invalid: "Invalid value for {path}: {detail}"
+value.not_a_number: "\"{value}\" is not a whole number."
+value.invalid_choice: "\"{value}\" is not allowed here. Choose one of: {choices}."
+
+# Not found
+page.not_found: "No page with the id or alias \"{page}\"."
+layout.not_found: "No layout named \"{layout}\"."
+layout.region_not_found: "The layout \"{layout}\" has no region \"{region}\"."
+layout.column_not_found: "The layout \"{layout}\" has no column \"{column}\"."
+content.not_found: "No content named \"{content}\"."
+content.translation_not_found: "The content \"{content}\" has no \"{language}\" version."
+menu.not_found: "No menu named \"{menu}\"."
+menu.item_not_found: "The menu \"{menu}\" has no item {item}."
+list.unknown_type: "Cannot list \"{type}\". Choose one of: {types}."
+
+# Successful commands
+ok.get_value: "{path} = {value}"
+ok.get_empty: "{path} is empty."
+ok.get_structure: "{path}:"
+ok.set: "{path} = {value}"
+ok.unset: "{path} removed."
+ok.list: "{type}: {count}"
+ok.help_index: "Commands ({count}). Type \"help <command>\" for details."
+ok.help_command: "help: {command}"
+
+# Help
+help.usage: "Usage: {usage}"
+help.examples: "Examples:"
+help.get: "Shows a value or a whole entity by its path."
+help.set: "Changes a value by its path. An empty value (\"\") removes an optional value."
+help.list: "Lists pages, layouts, content, menus or languages."
+help.help: "Lists the commands, or describes one."
+
+# Validation rules
+violation.name.invalid: "\"{name}\" is not a valid name. Use lowercase letters and digits, words joined by single hyphens, at most {max} characters."
+violation.name.reserved: "\"{name}\" is a reserved name here."
+violation.site.no_languages: "The website needs at least one language."
+violation.site.invalid_language: "\"{language}\" is not a valid language code (e.g. en, hu, pt-BR)."
+violation.site.duplicate_language: "The language \"{language}\" is listed twice."
+violation.site.unknown_default_language: "The default language \"{language}\" is not among the website's languages."
+violation.site.unknown_default_layout: "The default layout \"{layout}\" does not exist."
+violation.site.unknown_front_page: "The front page {page} does not exist."
+violation.site.next_page_id_in_use: "The next page id {next} is already in use (highest id: {highest})."
+violation.layout.duplicate_region: "The region \"{region}\" exists twice."
+violation.layout.duplicate_column: "The column \"{column}\" exists twice in its region."
+violation.layout.invalid_width: "A column width must be between 1 and {max}, not {width}."
+violation.layout.region_too_wide: "The columns of this region are {width} wide in total; at most {max} fit."
+violation.layout.content_and_menu: "A column can hold content or a menu, not both."
+violation.layout.unknown_content: "The content \"{content}\" does not exist."
+violation.layout.unknown_menu: "The menu \"{menu}\" does not exist."
+violation.page.invalid_id: "The page id {id} is not valid."
+violation.page.unknown_layout: "The layout \"{layout}\" does not exist."
+violation.page.invalid_alias: "\"{alias}\" is not a valid alias. Use lowercase letters, digits and hyphens, starting with \"/\", e.g. /about or /services/web-design."
+violation.page.reserved_alias: "The alias \"{alias}\" starts with the reserved \"{segment}\"."
+violation.page.duplicate_alias: "The alias \"{alias}\" is already used by page {page}."
+violation.page.unknown_column: "The layout \"{layout}\" has no column \"{column}\"."
+violation.page.unknown_content: "The content \"{content}\" does not exist."
+violation.content.no_translations: "The content has no language version."
+violation.content.missing_title: "The title is empty."
+violation.menu.invalid_target: "A menu item needs exactly one target: a page or a URL."
+violation.menu.unknown_page: "The page {page} does not exist."
+violation.menu.invalid_url: "\"{url}\" is not an allowed link. Use http(s)://, mailto: or a path starting with \"/\"."
+violation.text.unknown_language: "\"{language}\" is not among the website's languages."
+violation.text.missing_default_language: "A text in the default language ({language}) is required."

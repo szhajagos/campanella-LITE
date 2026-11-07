@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- PHP 8.3 or newer, with the `dom`, `mbstring`, `xml` and `xmlwriter` extensions that PHPUnit needs
+- PHP 8.3 or newer with the `mbstring` extension, plus `dom`, `xml` and `xmlwriter` for PHPUnit
 - Composer 2
 
 ## Setup
@@ -23,10 +23,24 @@ Dependencies are installed into `app/vendor/`, which keeps everything except `pu
 
 The same checks run on GitHub Actions for every push to `main` and every pull request, on PHP 8.3, 8.4 and 8.5 (`.github/workflows/ci.yml`). Dependencies are resolved for PHP 8.3 (`config.platform` in `composer.json`), so every PHP version in the matrix tests the same package versions.
 
+## Trying commands
+
+`bin/campanella` runs a batch against an installation (by default the repository root, which needs a `project/` directory). The test fixture is a complete sample project:
+
+```
+mkdir -p /tmp/demo && cp -r tests/Fixtures/valid-project /tmp/demo/project
+bin/campanella --root=/tmp/demo -e "list pages"
+bin/campanella --root=/tmp/demo --dry-run -e "set site.name \"New name\""
+```
+
+See [command-language.md](command-language.md) for the commands.
+
 ## Directory layout
 
 ```
 app/src/          # Campanella\Lite\ – application code (PSR-4)
+app/translations/ # Message catalogues (messages.{locale}.yaml)
+bin/campanella    # Developer CLI
 app/vendor/       # Composer dependencies (not committed)
 tests/            # Campanella\Lite\Tests\ – PHPUnit tests
 tests/Fixtures/   # Sample project directories used by tests

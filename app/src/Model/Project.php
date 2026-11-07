@@ -71,6 +71,115 @@ final class Project
         return $this->menus[$name] ?? null;
     }
 
+    public function withSite(Site $site): self
+    {
+        return $this->rebuild(site: $site);
+    }
+
+    public function withLayout(Layout $layout): self
+    {
+        $layouts = $this->layouts;
+        $layouts[$layout->name] = $layout;
+
+        return $this->rebuild(layouts: $layouts);
+    }
+
+    public function withoutLayout(string $name): self
+    {
+        $layouts = $this->layouts;
+        unset($layouts[$name]);
+
+        return $this->rebuild(layouts: $layouts);
+    }
+
+    public function withPage(Page $page): self
+    {
+        $pages = $this->pages;
+        $pages[$page->id] = $page;
+
+        return $this->rebuild(pages: $pages);
+    }
+
+    public function withoutPage(int $id): self
+    {
+        $pages = $this->pages;
+        unset($pages[$id]);
+
+        return $this->rebuild(pages: $pages);
+    }
+
+    public function withContent(Content $content): self
+    {
+        $contents = $this->contents;
+        $contents[$content->name] = $content;
+
+        return $this->rebuild(contents: $contents);
+    }
+
+    public function withoutContent(string $name): self
+    {
+        $contents = $this->contents;
+        unset($contents[$name]);
+
+        return $this->rebuild(contents: $contents);
+    }
+
+    public function withMenu(Menu $menu): self
+    {
+        $menus = $this->menus;
+        $menus[$menu->name] = $menu;
+
+        return $this->rebuild(menus: $menus);
+    }
+
+    public function withoutMenu(string $name): self
+    {
+        $menus = $this->menus;
+        unset($menus[$name]);
+
+        return $this->rebuild(menus: $menus);
+    }
+
+    /**
+     * Finds a page by its id ("2") or by an alias in any language ("/about").
+     */
+    public function findPage(string $reference): ?Page
+    {
+        if (preg_match('/^[1-9][0-9]*$/', $reference) === 1) {
+            return $this->page((int) $reference);
+        }
+
+        foreach ($this->pages as $page) {
+            if (in_array($reference, $page->alias->toArray(), true)) {
+                return $page;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, Layout>|null  $layouts
+     * @param array<int, Page>|null       $pages
+     * @param array<string, Content>|null $contents
+     * @param array<string, Menu>|null    $menus
+     */
+    private function rebuild(
+        ?Site $site = null,
+        ?array $layouts = null,
+        ?array $pages = null,
+        ?array $contents = null,
+        ?array $menus = null,
+    ): self {
+        return new self(
+            $site ?? $this->site,
+            array_values($layouts ?? $this->layouts),
+            array_values($pages ?? $this->pages),
+            array_values($contents ?? $this->contents),
+            array_values($menus ?? $this->menus),
+        );
+    }
+
     /**
      * @template T of object
      *

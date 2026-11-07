@@ -28,7 +28,10 @@ The rule that holds the design together: **the command interpreter is the only c
 | Data model | `Campanella\Lite\Model` | M1 | Done |
 | Project loading and saving | `Campanella\Lite\Project` | M1 | Done |
 | Validation | `Campanella\Lite\Validation` | M1 | Done |
-| Command interpreter | `Campanella\Lite\Command` | M2–M3 | Planned |
+| Command parser, interpreter, `get` / `set` / `list` / `help` | `Campanella\Lite\Command` | M2 | Done |
+| Message catalogue | `Campanella\Lite\I18n` | M2 | Done |
+| Developer CLI (`bin/campanella`) | `Campanella\Lite\Cli` | M2 | Done |
+| Entity commands (`page`, `content`, `layout`, `menu`, `check`) | `Campanella\Lite\Command\Handler` | M3 | Planned |
 | Generator and front controller | `Campanella\Lite\Generator` | M4 | Planned |
 | Admin dashboard | `Campanella\Lite\Admin` | M5 | Planned |
 
@@ -45,7 +48,7 @@ The rule that holds the design together: **the command interpreter is the only c
 
 Immutable value objects for the site, layouts (regions and columns), pages, content (one translation per language) and menus. Each knows how to build itself from decoded YAML (`fromArray`) and how to turn itself back into it (`toArray`), and a round trip gives the same data.
 
-`Project` is an immutable snapshot of the whole website description. The command interpreter (M2) will work on a changed copy and validate it before anything is written.
+`Project` is an immutable snapshot of the whole website description. The command interpreter works on a changed copy and validates it before anything is written.
 
 ### Project (`Campanella\Lite\Project`)
 
@@ -64,12 +67,35 @@ Immutable value objects for the site, layouts (regions and columns), pages, cont
 
 Structural errors normally only appear when someone edits files by hand. Commands produce well-formed data, so the errors they can cause are semantic and are reported as violations, all at once.
 
-## Planned write sequence (M2)
+## Layers built in M2
+
+### Command (`Campanella\Lite\Command`)
+
+- **`Parser\BatchParser`** turns the command box text into `ParsedCommand`s (words, options, multi-line text) and `SyntaxError`s with line numbers.
+- **`CommandRegistry`** matches the longest run of leading words to a command (`layout region add default hero` → `layout region add` + arguments) and checks the invocation against the command's `Signature`: argument count, known options, option values, text input. Handlers never see an invalid invocation.
+- **`CommandHandler`**s implement the commands. They change the project only through the **`Workspace`**, an in-memory copy that remembers which entities were touched, and report failure by throwing `CommandFailed` with a translatable message.
+- **`ProjectPaths`** reads any value by dotted path and writes a fixed set of fields, by changing the stored array form of an entity and rebuilding it, so every write passes the same structural checks as loading.
+- **`Interpreter`** runs a batch all or nothing (below) and returns a `BatchResult`.
+- **`Format\TextFormatter`** and **`Format\JsonFormatter`** render results for people and programs.
+
+### I18n (`Campanella\Lite\I18n`)
+
+A `Message` is a key plus parameters; the `Translator` turns it into text from `app/translations/messages.{locale}.yaml`, falling back to English. Validation violations are translated through the `violation.` key prefix. A test checks that every key used in the code has an English text.
+
+### CLI (`Campanella\Lite\Cli`)
+
+`bin/campanella` reads a batch from `-e`, a file or standard input and prints the result as text or JSON.
+
+### Application
+
+`Campanella\Lite\Application` wires the services of an installation together explicitly, without a container.
+
+## Write sequence
 
 1. Parse the whole batch. A syntax error rejects it.
 2. Acquire the write lock and load the project.
-3. Apply each command to an in-memory copy of the project.
-4. Validate the resulting project. Any violation rejects the batch.
-5. Store an undo snapshot of the files about to change.
-6. Write the changed files, append to the command log, clear affected cached pages.
+3. Apply each command to the workspace. The first failing command rejects the batch.
+4. Validate the result. Violations that were not there before reject the batch.
+5. *(M6)* Store an undo snapshot of the files about to change.
+6. Write the changed entities (or, on a dry run, only report them). *(M4–M6)* Append to the command log, clear affected cached pages.
 7. Release the lock and return the responses.

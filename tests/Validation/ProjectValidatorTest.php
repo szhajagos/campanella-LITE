@@ -51,6 +51,8 @@ final class ProjectValidatorTest extends TestCase
         // Layouts
         yield 'invalid layout name' => [['layout' => ['name' => 'Default']], 'name.invalid at layout.Default (name=Default, max=64)'];
         yield 'invalid region name' => [['layout.regions.0' => ['name' => 'main body']], 'name.invalid at layout.default.main body (name=main body, max=64)'];
+        yield 'reserved region name' => [['layout.regions.0' => ['name' => 'title']], 'name.reserved at layout.default.title (name=title)'];
+        yield 'reserved column name' => [['layout.regions.1.columns.1' => ['name' => 'container']], 'name.reserved at layout.default.body.container (name=container)'];
         yield 'duplicate region' => [['layout.regions.1' => ['name' => 'header']], 'layout.duplicate_region at layout.default.header (region=header)'];
         yield 'duplicate column' => [['layout.regions.1.columns.1' => ['name' => 'main', 'width' => 4]], 'layout.duplicate_column at layout.default.body.main (column=main)'];
         yield 'zero width' => [['layout.regions.1.columns.1' => ['width' => 0]], 'layout.invalid_width at layout.default.body.sidebar.width (width=0, max=12)'];

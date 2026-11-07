@@ -36,6 +36,20 @@ final class Content
     }
 
     /**
+     * @return array<string, array{title: string, format: string, body: string}> language => translation data
+     */
+    public function toArray(): array
+    {
+        $data = [];
+
+        foreach ($this->translations as $language => $translation) {
+            $data[$language] = $translation->frontMatter() + ['body' => $translation->body];
+        }
+
+        return $data;
+    }
+
+    /**
      * @return list<string>
      */
     public function languages(): array

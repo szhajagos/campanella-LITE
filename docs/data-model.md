@@ -73,10 +73,10 @@ regions:
 | `name` | machine name | |
 | `title` | localized text, optional | Shown in the admin |
 | `regions` | list | Horizontal bands, top to bottom; each a Bootstrap `row` |
-| `regions[].name` | machine name | Unique within the layout |
+| `regions[].name` | machine name | Unique within the layout; not `name` or `title` |
 | `regions[].container` | `fixed` or `fluid`, optional | Bootstrap container type; default `fixed` |
 | `regions[].columns` | list | Each a Bootstrap `col-md-{width}` |
-| `columns[].name` | machine name | Unique within the region |
+| `columns[].name` | machine name | Unique within the region; not `container` |
 | `columns[].width` | 1–12 | Grid columns; a region's widths add up to at most 12 |
 | `columns[].content` | list of content names, optional | Default content, shown on every page that does not override the column |
 | `columns[].menu` | menu name, optional | A menu to show in the column; excludes `content` |
@@ -147,7 +147,7 @@ Each item has a `label` (localized, required in the default language) and exactl
 page.unknown_layout at page.2.layout (layout=wide)
 ```
 
-Messages for these codes will come from the translatable message catalogue (milestone 2).
+The text of each code comes from the message catalogue under the key `violation.{code}`.
 
 ### Aliases
 
@@ -163,6 +163,7 @@ An alias:
 | Code | Meaning | Parameters |
 | --- | --- | --- |
 | `name.invalid` | Not a valid machine name | `name`, `max` |
+| `name.reserved` | A region named `name` or `title`, or a column named `container` | `name` |
 | `site.no_languages` | No language is enabled | |
 | `site.invalid_language` | Not a valid language code | `language` |
 | `site.duplicate_language` | A language is listed twice | `language` |

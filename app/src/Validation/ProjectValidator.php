@@ -32,6 +32,12 @@ final class ProjectValidator
     /** One or more lowercase ASCII segments: "/about", "/services/web-design". */
     public const ALIAS_PATTERN = '#^(?:/[a-z0-9]+(?:-[a-z0-9]+)*)+$#';
 
+    /** Region names that would collide with layout fields in paths like "layout.default.title". */
+    public const RESERVED_REGION_NAMES = ['name', 'title'];
+
+    /** Column names that would collide with region fields in paths like "layout.default.body.container". */
+    public const RESERVED_COLUMN_NAMES = ['container'];
+
     /** First path segments owned by the system. Site language codes are reserved as well. */
     public const RESERVED_SEGMENTS = ['admin', 'assets', 'node'];
 
@@ -129,6 +135,10 @@ final class ProjectValidator
             $regionPath = $base . '.' . $region->name;
             $this->checkName($region->name, $regionPath);
 
+            if (in_array($region->name, self::RESERVED_REGION_NAMES, true)) {
+                $this->add('name.reserved', $regionPath, ['name' => $region->name]);
+            }
+
             if (isset($regionNames[$region->name])) {
                 $this->add('layout.duplicate_region', $regionPath, ['region' => $region->name]);
             }
@@ -139,6 +149,10 @@ final class ProjectValidator
             foreach ($region->columns as $column) {
                 $columnPath = $regionPath . '.' . $column->name;
                 $this->checkName($column->name, $columnPath);
+
+                if (in_array($column->name, self::RESERVED_COLUMN_NAMES, true)) {
+                    $this->add('name.reserved', $columnPath, ['name' => $column->name]);
+                }
 
                 if (isset($columnNames[$column->name])) {
                     $this->add('layout.duplicate_column', $columnPath, ['column' => $column->name]);

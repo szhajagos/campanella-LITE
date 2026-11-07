@@ -122,6 +122,39 @@ final class ProjectRepository
         return $this->store->delete(self::MENU_DIR . '/' . $name . '.yaml');
     }
 
+    /**
+     * Writes the given entities as they are in the project, and deletes those
+     * that no longer exist in it.
+     *
+     * @param list<EntityRef> $refs
+     */
+    public function commit(Project $project, array $refs): void
+    {
+        foreach ($refs as $ref) {
+            match ($ref->type) {
+                EntityRef::SITE => $this->saveSite($project->site),
+                EntityRef::LAYOUT => ($layout = $project->layout($ref->id)) !== null ? $this->saveLayout($layout) : $this->deleteLayout($ref->id),
+                EntityRef::PAGE => ($page = $project->page((int) $ref->id)) !== null ? $this->savePage($page) : $this->deletePage((int) $ref->id),
+                EntityRef::CONTENT => ($content = $project->content($ref->id)) !== null ? $this->saveContent($content) : $this->deleteContent($ref->id),
+                EntityRef::MENU => ($menu = $project->menu($ref->id)) !== null ? $this->saveMenu($menu) : $this->deleteMenu($ref->id),
+            };
+        }
+    }
+
+    /**
+     * The file (or, for content, the directory) that stores an entity, relative to the project directory.
+     */
+    public static function pathOf(EntityRef $ref): string
+    {
+        return match ($ref->type) {
+            EntityRef::SITE => self::SITE_FILE,
+            EntityRef::LAYOUT => self::LAYOUT_DIR . '/' . $ref->id . '.yaml',
+            EntityRef::PAGE => self::PAGE_DIR . '/' . $ref->id . '.yaml',
+            EntityRef::CONTENT => self::CONTENT_DIR . '/' . $ref->id . '/',
+            EntityRef::MENU => self::MENU_DIR . '/' . $ref->id . '.yaml',
+        };
+    }
+
     private function loadSite(): Site
     {
         return Site::fromArray($this->readYaml(self::SITE_FILE), self::SITE_FILE);
