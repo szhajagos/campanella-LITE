@@ -26,18 +26,20 @@ Status: **Accepted** = agreed and binding; **Proposed** = current plan, open to 
 | 2026-11-07 | Repository | Public GitHub repository; commits are made by the maintainer. | Accepted |
 | 2026-11-07 | Runtime | Minimum PHP version is 8.3 (security support until 2027-12-31); to be reviewed before the first stable release. | Accepted |
 | 2026-11-07 | URLs | If a page has an alias, `/node/<id>` answers with an HTTP 301 redirect to the alias. | Accepted |
+| 2026-11-07 | URLs | The page served at `/` is set with `front_page` in `site.yaml`; an alias cannot be `/`. | Accepted |
+| 2026-11-07 | URLs | Aliases may not start with `admin`, `assets`, `node` or an enabled language code, which are kept free for language prefixes. Aliases are unique per language. | Accepted |
 | 2026-11-07 | URLs | When an alias changes, the old alias redirects (301) to the page's current alias, until another page takes the old alias. Redirects point to page ids, so renaming twice never creates a chain. | Accepted |
 
 ## MVP (0.1.0)
 
 Built from the inside out: storage and command interpreter first, user interface last. From milestone 2 on, a developer CLI (`bin/campanella`) runs the same interpreter, so everything can be tested without a browser.
 
-- [ ] **M1 – Skeleton and storage:** Composer project, directory layout, YAML/Markdown read and write (atomic, locked), entity classes, validator, PHPUnit tests, CI.
+- [x] **M1 – Skeleton and storage:** Composer project, directory layout, YAML/Markdown read and write (atomic, locked), entity classes, validator, PHPUnit tests, CI.
 - [ ] **M2 – Command interpreter:** lexer and parser, command registry, `get` / `set` / `list` / `help`, batch transactions, `@dry-run`, text and JSON responses, message catalogue (English).
 - [ ] **M3 – Entity commands:** `page`, `content`, `layout`, `menu` commands and `check`.
 - [ ] **M4 – Generator:** default Bootstrap 5 theme in Twig, front controller, `.htaccess`, cache manifest, alias redirects, `build`, `cache clear`.
 - [ ] **M5 – Admin dashboard:** login, command box, response box, command history, status bar.
-- [ ] **M6 – Finishing:** command log, `undo`, installer, starter project with example pages, command language reference.
+- [ ] **M6 – Finishing:** command log, `undo`, installer, starter project with example pages, command language reference, committed `composer.lock`.
 
 ## After the MVP
 

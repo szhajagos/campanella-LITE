@@ -1,0 +1,8 @@
+id: 2
+alias: { en: /about }
+title: { en: About us }
+description: { en: Meet our team. }
+layout: default
+status: published
+placements:
+  body.main: [intro, team]

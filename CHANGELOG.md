@@ -15,3 +15,12 @@ Added, Changed, Deprecated, Removed, Fixed, Security.
 - Project documentation: README, ROADMAP, CHANGELOG and MIT LICENSE.
 - `docs/` directory for developer documentation.
 - Repository settings: `.editorconfig`, `.gitattributes`, `.gitignore`.
+- Composer project with PSR-4 autoloading (`Campanella\Lite\` in `app/src/`); dependencies in `app/vendor/`.
+- File storage: atomic writes, path safety checks and an exclusive write lock.
+- YAML and Markdown front matter codecs that accept plain data only.
+- Data model for the site, layouts (regions and columns), pages, content and menus, with language-dependent fields stored per language.
+- `front_page` setting in `site.yaml` for the page served at `/`.
+- Project repository that loads the project directory and saves single entities.
+- Project validator with stable violation codes for names, references, layout widths, aliases and languages.
+- PHPUnit test suite, PHPStan analysis at level 8, and a GitHub Actions workflow for PHP 8.3, 8.4 and 8.5.
+- Developer documentation: architecture, data model, development guide.

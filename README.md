@@ -4,7 +4,7 @@
 
 Campanella Lite is managed through a small, documented command language instead of forms and a database. Every change, whether typed by an administrator or (later) proposed by an AI agent, goes through the same command interpreter, which validates it, applies it atomically and logs it. Visitors get plain static HTML.
 
-> **Status: early design stage (pre-alpha).** There is no usable release yet. The concepts below describe the planned MVP and may still change. See [ROADMAP.md](ROADMAP.md) for decisions and progress.
+> **Status: pre-alpha.** Milestone 1 (storage, data model, validation) is done; there is no usable release yet. The concepts below describe the planned MVP and may still change. See [ROADMAP.md](ROADMAP.md) for decisions and progress.
 
 ---
 
@@ -112,7 +112,7 @@ Highlights:
 
 | Entity | Stored in | Identifier |
 | --- | --- | --- |
-| Site settings | `project/site.yaml` | – |
+| Site settings (languages, front page, …) | `project/site.yaml` | – |
 | Layout (regions → columns) | `project/layouts/<name>.yaml` | machine name |
 | Page | `project/pages/<id>.yaml` | numeric id assigned by the system |
 | Content | `project/content/<name>/<language>.md` | machine name |
@@ -167,7 +167,7 @@ Only `public/` should be exposed by the web server.
 
 - [ROADMAP.md](ROADMAP.md): decisions made so far and planned work
 - [CHANGELOG.md](CHANGELOG.md): changes in each release
-- [docs/](docs/): developer documentation (grows with the code)
+- [docs/](docs/): developer documentation (grows with the code), including the [architecture](docs/architecture.md), the [data model](docs/data-model.md) and the [development guide](docs/development.md)
 
 A user guide will be added once there is something to guide through.
 
@@ -177,7 +177,7 @@ Campanella Lite is an independent sibling of the Campanella CMS, a capability-ba
 
 ## Contributing
 
-The project is in its design stage. Issues with questions, ideas and feedback are welcome. Contribution guidelines will follow when the code base takes shape.
+The project is in an early stage. Issues with questions, ideas and feedback are welcome. To work on the code, see the [development guide](docs/development.md): `composer install`, then `composer check` runs the static analysis and the tests. Contribution guidelines will follow when the code base takes shape.
 
 ## License
 

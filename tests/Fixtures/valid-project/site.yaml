@@ -1,0 +1,8 @@
+name: Example Ltd.
+base_url: https://example.com
+languages: [en]
+default_language: en
+default_layout: default
+theme: default
+next_page_id: 3
+front_page: 1
