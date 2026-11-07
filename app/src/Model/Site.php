@@ -70,6 +70,41 @@ final class Site
     }
 
     /**
+     * @param list<string>|null $languages
+     */
+    public function with(
+        ?string $name = null,
+        ?array $languages = null,
+        ?string $defaultLanguage = null,
+        ?string $defaultLayout = null,
+    ): self {
+        return new self(
+            $name ?? $this->name,
+            $this->baseUrl,
+            $languages ?? $this->languages,
+            $defaultLanguage ?? $this->defaultLanguage,
+            $defaultLayout ?? $this->defaultLayout,
+            $this->theme,
+            $this->nextPageId,
+            $this->frontPage,
+        );
+    }
+
+    public function withFrontPage(?int $frontPage): self
+    {
+        return new self(
+            $this->name,
+            $this->baseUrl,
+            $this->languages,
+            $this->defaultLanguage,
+            $this->defaultLayout,
+            $this->theme,
+            $this->nextPageId,
+            $frontPage,
+        );
+    }
+
+    /**
      * Returns a copy with the next page id taken; the caller gets the id to use.
      *
      * @return array{0: self, 1: int} the updated site and the allocated id

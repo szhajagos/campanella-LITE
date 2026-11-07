@@ -41,6 +41,14 @@ final class Region
         return new self($fields->string('name'), $columns, $container);
     }
 
+    /**
+     * @param list<Column> $columns
+     */
+    public function withColumns(array $columns): self
+    {
+        return new self($this->name, $columns, $this->container);
+    }
+
     public function column(string $name): ?Column
     {
         foreach ($this->columns as $column) {

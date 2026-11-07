@@ -20,6 +20,19 @@ final class MenuItem
     ) {
     }
 
+    /**
+     * @param list<MenuItem> $children
+     */
+    public function withChildren(array $children): self
+    {
+        return new self($this->label, $this->page, $this->url, $children);
+    }
+
+    public function withLabel(LocalizedText $label): self
+    {
+        return new self($label, $this->page, $this->url, $this->children);
+    }
+
     public static function fromFields(Fields $fields): self
     {
         $fields->allowOnly(['label', 'page', 'url', 'children']);

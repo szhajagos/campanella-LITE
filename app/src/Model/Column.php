@@ -37,6 +37,24 @@ final class Column
         );
     }
 
+    public function withWidth(int $width): self
+    {
+        return new self($this->name, $width, $this->content, $this->menu);
+    }
+
+    /**
+     * @param list<string> $content
+     */
+    public function withContent(array $content): self
+    {
+        return new self($this->name, $this->width, $content, $this->menu);
+    }
+
+    public function withMenu(?string $menu): self
+    {
+        return new self($this->name, $this->width, $this->content, $menu);
+    }
+
     /**
      * @return array<string, mixed>
      */

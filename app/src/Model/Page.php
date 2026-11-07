@@ -65,6 +65,30 @@ final class Page
     }
 
     /**
+     * Returns a copy with the given fields replaced.
+     *
+     * @param array<string, list<string>>|null $placements
+     */
+    public function with(
+        ?LocalizedText $title = null,
+        ?string $layout = null,
+        ?PageStatus $status = null,
+        ?LocalizedText $alias = null,
+        ?LocalizedText $description = null,
+        ?array $placements = null,
+    ): self {
+        return new self(
+            $this->id,
+            $title ?? $this->title,
+            $layout ?? $this->layout,
+            $status ?? $this->status,
+            $alias ?? $this->alias,
+            $description ?? $this->description,
+            $placements ?? $this->placements,
+        );
+    }
+
+    /**
      * The address of the page in a language: its alias, or /node/{id} without one.
      */
     public function path(string $language): string

@@ -232,7 +232,7 @@ final class InterpreterTest extends TestCase
         $result = $this->execute("help\nhelp set");
 
         self::assertSame(Outcome::Unchanged, $result->outcome);
-        self::assertSame(4, $result->lines[0]->message->params['count']);
+        self::assertSame(count($this->application->registry()->all()), $result->lines[0]->message->params['count']);
         self::assertSame('set', $result->lines[1]->message->params['command']);
     }
 

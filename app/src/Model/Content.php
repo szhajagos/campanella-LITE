@@ -30,6 +30,22 @@ final class Content
         $this->translations = $byLanguage;
     }
 
+    public function withTranslation(ContentTranslation $translation): self
+    {
+        $translations = $this->translations;
+        $translations[$translation->language] = $translation;
+
+        return new self($this->name, array_values($translations));
+    }
+
+    public function withoutTranslation(string $language): self
+    {
+        $translations = $this->translations;
+        unset($translations[$language]);
+
+        return new self($this->name, array_values($translations));
+    }
+
     public function translation(string $language): ?ContentTranslation
     {
         return $this->translations[$language] ?? null;

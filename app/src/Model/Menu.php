@@ -19,6 +19,14 @@ final class Menu
     }
 
     /**
+     * @param list<MenuItem> $items
+     */
+    public function withItems(array $items): self
+    {
+        return new self($this->name, $items);
+    }
+
+    /**
      * @param array<mixed> $data
      */
     public static function fromArray(array $data, string $source): self

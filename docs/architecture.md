@@ -31,7 +31,7 @@ The rule that holds the design together: **the command interpreter is the only c
 | Command parser, interpreter, `get` / `set` / `list` / `help` | `Campanella\Lite\Command` | M2 | Done |
 | Message catalogue | `Campanella\Lite\I18n` | M2 | Done |
 | Developer CLI (`bin/campanella`) | `Campanella\Lite\Cli` | M2 | Done |
-| Entity commands (`page`, `content`, `layout`, `menu`, `check`) | `Campanella\Lite\Command\Handler` | M3 | Planned |
+| Entity commands (`page`, `content`, `layout`, `menu`, `language`, `check`) | `Campanella\Lite\Command\Handler` | M3 | Done |
 | Generator and front controller | `Campanella\Lite\Generator` | M4 | Planned |
 | Admin dashboard | `Campanella\Lite\Admin` | M5 | Planned |
 
@@ -77,6 +77,15 @@ Structural errors normally only appear when someone edits files by hand. Command
 - **`ProjectPaths`** reads any value by dotted path and writes a fixed set of fields, by changing the stored array form of an entity and rebuilding it, so every write passes the same structural checks as loading.
 - **`Interpreter`** runs a batch all or nothing (below) and returns a `BatchResult`.
 - **`Format\TextFormatter`** and **`Format\JsonFormatter`** render results for people and programs.
+
+### Entity commands (M3)
+
+The handlers in `Command\Handler\{Page,Content,Layout,Menu,Language}` build on two helpers in `Command\Handler\Support`:
+
+- **`Lookup`** finds entities and checks input (names, languages, positions, required options), failing with translatable messages.
+- **`References`** finds what refers to an entity ("menu main item 2", "page 3 (body.main)") so that deleting something in use fails with a precise list, and removes those references when the user adds `--force`.
+
+Model objects offer typed `with…()` methods, so a handler changes an entity by building a new one; the workspace keeps track of what changed.
 
 ### I18n (`Campanella\Lite\I18n`)
 

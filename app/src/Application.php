@@ -7,9 +7,31 @@ namespace Campanella\Lite;
 use Campanella\Lite\Command\CommandRegistry;
 use Campanella\Lite\Command\Format\JsonFormatter;
 use Campanella\Lite\Command\Format\TextFormatter;
+use Campanella\Lite\Command\Handler\CheckCommand;
+use Campanella\Lite\Command\Handler\Content\ContentCreateCommand;
+use Campanella\Lite\Command\Handler\Content\ContentDeleteCommand;
+use Campanella\Lite\Command\Handler\Content\ContentEditCommand;
+use Campanella\Lite\Command\Handler\Content\ContentTranslateCommand;
 use Campanella\Lite\Command\Handler\GetCommand;
 use Campanella\Lite\Command\Handler\HelpCommand;
+use Campanella\Lite\Command\Handler\Language\LanguageCommand;
+use Campanella\Lite\Command\Handler\Layout\LayoutColumnAddCommand;
+use Campanella\Lite\Command\Handler\Layout\LayoutColumnRemoveCommand;
+use Campanella\Lite\Command\Handler\Layout\LayoutCreateCommand;
+use Campanella\Lite\Command\Handler\Layout\LayoutDeleteCommand;
+use Campanella\Lite\Command\Handler\Layout\LayoutPlacementCommand;
+use Campanella\Lite\Command\Handler\Layout\LayoutRegionAddCommand;
+use Campanella\Lite\Command\Handler\Layout\LayoutRegionRemoveCommand;
 use Campanella\Lite\Command\Handler\ListCommand;
+use Campanella\Lite\Command\Handler\Menu\MenuCreateCommand;
+use Campanella\Lite\Command\Handler\Menu\MenuDeleteCommand;
+use Campanella\Lite\Command\Handler\Menu\MenuItemAddCommand;
+use Campanella\Lite\Command\Handler\Menu\MenuItemRemoveCommand;
+use Campanella\Lite\Command\Handler\Page\PageAliasCommand;
+use Campanella\Lite\Command\Handler\Page\PageCreateCommand;
+use Campanella\Lite\Command\Handler\Page\PageDeleteCommand;
+use Campanella\Lite\Command\Handler\Page\PagePlacementCommand;
+use Campanella\Lite\Command\Handler\Page\PageStatusCommand;
 use Campanella\Lite\Command\Handler\SetCommand;
 use Campanella\Lite\Command\Interpreter;
 use Campanella\Lite\I18n\Translator;
@@ -48,6 +70,34 @@ final class Application
                 new GetCommand(),
                 new SetCommand(),
                 new ListCommand(),
+                new CheckCommand(),
+                new PageCreateCommand(),
+                new PageDeleteCommand(),
+                new PageAliasCommand(),
+                PageStatusCommand::publish(),
+                PageStatusCommand::unpublish(),
+                new PagePlacementCommand(PagePlacementCommand::PLACE),
+                new PagePlacementCommand(PagePlacementCommand::UNPLACE),
+                new PagePlacementCommand(PagePlacementCommand::RESET),
+                new ContentCreateCommand(),
+                new ContentEditCommand(),
+                new ContentTranslateCommand(),
+                new ContentDeleteCommand(),
+                new LayoutCreateCommand(),
+                new LayoutDeleteCommand(),
+                new LayoutRegionAddCommand(),
+                new LayoutRegionRemoveCommand(),
+                new LayoutColumnAddCommand(),
+                new LayoutColumnRemoveCommand(),
+                new LayoutPlacementCommand(place: true),
+                new LayoutPlacementCommand(place: false),
+                new MenuCreateCommand(),
+                new MenuDeleteCommand(),
+                new MenuItemAddCommand(),
+                new MenuItemRemoveCommand(),
+                new LanguageCommand(LanguageCommand::ADD),
+                new LanguageCommand(LanguageCommand::REMOVE),
+                new LanguageCommand(LanguageCommand::DEFAULT),
             ]);
             $this->registry->register(new HelpCommand($this->registry));
         }

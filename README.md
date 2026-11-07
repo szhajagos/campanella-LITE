@@ -4,7 +4,7 @@
 
 Campanella Lite is managed through a small, documented command language instead of forms and a database. Every change, whether typed by an administrator or (later) proposed by an AI agent, goes through the same command interpreter, which validates it, applies it atomically and logs it. Visitors get plain static HTML.
 
-> **Status: pre-alpha.** Milestones 1 (storage, data model, validation) and 2 (command interpreter) are done; there is no usable release yet. The concepts below describe the planned MVP and may still change. See [ROADMAP.md](ROADMAP.md) for decisions and progress.
+> **Status: pre-alpha.** Milestones 1–3 are done: storage, data model, validation, the command interpreter and the commands that build a website. Generating the public site comes next; there is no usable release yet. The concepts below describe the planned MVP and may still change. See [ROADMAP.md](ROADMAP.md) for decisions and progress.
 
 ---
 
@@ -74,7 +74,7 @@ Campanella Lite takes a different route:
 
 ## The command language
 
-> The interpreter and the `get`, `set`, `list` and `help` commands work; the commands that create pages, content, layouts and menus come in milestone 3. The full reference is in [docs/command-language.md](docs/command-language.md).
+> All commands of the MVP that change the website description work. The full reference is in [docs/command-language.md](docs/command-language.md).
 
 One line is one command, in the form `<noun> <verb> [arguments] [--option=value ...]`. Everything typed into the command box is executed as a single all-or-nothing batch.
 

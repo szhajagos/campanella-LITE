@@ -40,6 +40,51 @@ final class Layout
         return new self($fields->string('name'), $regions, $fields->localized('title'));
     }
 
+    /**
+     * @param list<Region> $regions
+     */
+    public function withRegions(array $regions): self
+    {
+        return new self($this->name, $regions, $this->title);
+    }
+
+    public function withName(string $name): self
+    {
+        return new self($name, $this->regions, $this->title);
+    }
+
+    public function withTitle(LocalizedText $title): self
+    {
+        return new self($this->name, $this->regions, $title);
+    }
+
+    /**
+     * Returns a copy in which one column is replaced by the callback's result.
+     *
+     * @param callable(Column): Column $change
+     */
+    public function withColumn(string $path, callable $change): self
+    {
+        [$regionName, $columnName] = array_pad(explode('.', $path, 2), 2, '');
+        $regions = [];
+
+        foreach ($this->regions as $region) {
+            if ($region->name === $regionName) {
+                $columns = [];
+
+                foreach ($region->columns as $column) {
+                    $columns[] = $column->name === $columnName ? $change($column) : $column;
+                }
+
+                $region = $region->withColumns($columns);
+            }
+
+            $regions[] = $region;
+        }
+
+        return $this->withRegions($regions);
+    }
+
     public function region(string $name): ?Region
     {
         foreach ($this->regions as $region) {

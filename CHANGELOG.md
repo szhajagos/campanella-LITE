@@ -31,3 +31,10 @@ Added, Changed, Deprecated, Removed, Fixed, Security.
 - Text and JSON output; JSON responses carry stable message keys and parameters next to the text.
 - Developer CLI `bin/campanella` (`-e`, file or standard input, `--dry-run`, `--json`, `--locale`, `--root`).
 - Command language reference: `docs/command-language.md`.
+- Page commands: `page create`, `page delete`, `page alias`, `page publish`, `page unpublish`, `page place`, `page unplace`, `page reset`.
+- Content commands: `content create`, `content edit`, `content translate`, `content delete` (whole content or one language version).
+- Layout commands: `layout create` (empty or `--from` a copy), `layout delete`, `layout region add|remove`, `layout column add|remove`, `layout place|unplace` for default content.
+- Menu commands: `menu create`, `menu delete`, `menu item add` (to a page or URL, nested with `--parent`), `menu item remove`.
+- Language commands: `language add`, `language remove`, `language default`.
+- `check` lists every validation problem of the website.
+- Deleting something that is still used fails with a list of what uses it; `--force` also removes those references.

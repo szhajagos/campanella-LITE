@@ -31,6 +31,9 @@ Status: **Accepted** = agreed and binding; **Proposed** = current plan, open to 
 | 2026-11-07 | Data model | Region names `name` and `title` and the column name `container` are reserved, so that paths such as `layout.default.body.main.width` stay unambiguous. | Accepted |
 | 2026-11-07 | Commands | A batch is rejected only by violations it introduces; problems that already existed (e.g. from hand-edited files) never block unrelated changes. | Accepted |
 | 2026-11-07 | Commands | Responses carry a stable message key and parameters; the text comes from a per-locale catalogue with English fallback. JSON output exposes both, for the dashboard and the AI module. | Accepted |
+| 2026-11-07 | Commands | A page column shows the layout's default content until the page places or removes something there; `page place`/`page unplace` start from what the page shows, `page reset` returns to the defaults. | Accepted |
+| 2026-11-07 | Commands | Deleting an entity that is still used fails and lists the references; `--force` removes the references too. Layouts in use can never be deleted, because pages cannot be left without one. | Accepted |
+| 2026-11-07 | Commands | Rules are checked at the end of a batch, so a batch may pass through intermediate states (e.g. narrow a column, then add one) as long as the result is valid. | Accepted |
 | 2026-11-07 | URLs | When an alias changes, the old alias redirects (301) to the page's current alias, until another page takes the old alias. Redirects point to page ids, so renaming twice never creates a chain. | Accepted |
 
 ## MVP (0.1.0)
@@ -39,7 +42,7 @@ Built from the inside out: storage and command interpreter first, user interface
 
 - [x] **M1 – Skeleton and storage:** Composer project, directory layout, YAML/Markdown read and write (atomic, locked), entity classes, validator, PHPUnit tests, CI.
 - [x] **M2 – Command interpreter:** lexer and parser, command registry, `get` / `set` / `list` / `help`, batch transactions, `@dry-run`, text and JSON responses, message catalogue (English).
-- [ ] **M3 – Entity commands:** `page`, `content`, `layout`, `menu` and `language` commands and `check`.
+- [x] **M3 – Entity commands:** `page`, `content`, `layout`, `menu` and `language` commands and `check`.
 - [ ] **M4 – Generator:** default Bootstrap 5 theme in Twig, front controller, `.htaccess`, cache manifest, alias redirects, `build`, `cache clear`.
 - [ ] **M5 – Admin dashboard:** login, command box, response box, command history, status bar.
 - [ ] **M6 – Finishing:** command log, `undo`, installer, starter project with example pages, command language reference, committed `composer.lock`.

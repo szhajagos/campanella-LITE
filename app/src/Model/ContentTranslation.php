@@ -10,12 +10,24 @@ namespace Campanella\Lite\Model;
  */
 final class ContentTranslation
 {
+    public const DEFAULT_FORMAT = ContentFormat::Markdown;
+
     public function __construct(
         public readonly string $language,
         public readonly string $title,
         public readonly string $body,
         public readonly ContentFormat $format = ContentFormat::Markdown,
     ) {
+    }
+
+    public function withBody(string $body): self
+    {
+        return new self($this->language, $this->title, $body, $this->format);
+    }
+
+    public function withTitle(string $title): self
+    {
+        return new self($this->language, $title, $this->body, $this->format);
     }
 
     /**

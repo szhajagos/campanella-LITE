@@ -2,7 +2,7 @@
 
 Everything that changes a Campanella Lite website goes through the command language: the admin dashboard, the developer CLI and the future AI module all submit the same commands to the same interpreter.
 
-This document describes the syntax, how a batch is executed, the responses, and the commands available so far. Commands for creating and deleting pages, content, layouts and menus follow in milestone 3.
+This document describes the syntax, how a batch is executed, the responses, and every command. `help` and `help <command>` show the same information in the admin and the CLI.
 
 ## Batches
 
@@ -158,7 +158,7 @@ Changes a value. Text with spaces must be quoted. An empty value (`""`) removes 
 | `menu.<menu>.items.<n>….url` | URL, or `""` |
 | `menu.<menu>.items.<n>….page` | Page id, or `""` |
 
-Structural changes (adding regions, placing content, creating pages) have their own commands (milestone 3). System fields such as page ids and `site.next_page_id` cannot be set.
+Structural changes (adding regions, placing content, creating pages) have their own commands, below. System fields such as page ids and `site.next_page_id` cannot be set.
 
 ### `list <type>`
 
@@ -167,6 +167,105 @@ Lists `pages`, `layouts`, `content`, `menus` or `languages` as a table.
 ### `help [<command>]`
 
 Without an argument, lists every command with its usage. With a command name, shows its description, usage and examples.
+
+### `check`
+
+Validates the whole website and lists every problem with its path, including problems that existed before (for example from hand-edited files). It changes nothing.
+
+## Common conventions
+
+- **Pages** are referred to by id or alias: `2` or `/about`. Inside a batch, refer to a page you just created by the alias you gave it.
+- **Columns** are written as `region.column`: `body.main`.
+- **Menu items** are positions counted from 1; `2.1` is the first child of the second item.
+- **`--lang=<code>`** chooses the language of a text; without it, the default language is meant. The language must be enabled.
+- **`--at=<n>`** inserts at a position counted from 1; without it, items go to the end.
+- **Deleting something that is still used** fails and lists what uses it. **`--force`** deletes it anyway and removes those references too (menu items, placements, the front page setting). Layouts in use cannot be deleted, because pages cannot be left without a layout.
+
+## Pages
+
+| Command | Description |
+| --- | --- |
+| `page create --title=<title> [--alias=<alias>] [--layout=<layout>] [--status=draft\|published] [--description=<text>] [--lang=<code>]` | Creates a page. Its id comes from `site.next_page_id`; without an alias it is at `/node/<id>`. New pages are drafts and use the default layout unless told otherwise. |
+| `page delete <page> [--force]` | Deletes a page. Menu items pointing to it and the front page setting block this unless `--force`. |
+| `page alias <page> <alias> [--lang=<code>]` | Sets the alias. `page alias <page> --remove` removes it. |
+| `page publish <page>` / `page unpublish <page>` | Makes the page visible to visitors, or a draft again. |
+| `page place <page> <column> <content> [<content> …] [--at=<n>]` | Places content into a column of the page. |
+| `page unplace <page> <column> <content>` | Removes content from a column of the page. |
+| `page reset <page> <column>` | Makes the column show the layout's default content again. |
+
+**How placements work.** A column of a page shows the layout's default content until the page places or removes something there. From then on the page keeps its own list for that column. `page place` and `page unplace` start from what the page currently shows, so they add to or remove from the visible content; `page reset` returns to the layout's defaults.
+
+```
+page create --title="Contact" --alias=/contact --status=published
+page place /contact body.main contact-text
+page unplace /contact body.sidebar contact-box
+menu item add main --label="Contact" --page=/contact
+```
+
+## Content
+
+| Command | Description |
+| --- | --- |
+| `content create <name> --title=<title> [--lang=<code>] [<<< text >>>]` | Creates content in one language. |
+| `content edit <name> [--lang=<code>] <<< text >>>` | Replaces the text of an existing language version. |
+| `content translate <name> <language> [--title=<title>] [<<< text >>>]` | Adds a language version (title required), or updates the title and/or text of an existing one. |
+| `content delete <name> [--force]` | Deletes the content with all its language versions. Placements in layouts and pages block this unless `--force`. |
+| `content delete <name> --lang=<code>` | Deletes one language version. The last remaining version cannot be deleted this way. |
+
+```
+content create contact-text --title="Contact" <<<
+Write to us: **info@example.com**
+>>>
+content translate contact-text hu --title="Kapcsolat" <<<
+Írjon nekünk: **info@example.com**
+>>>
+```
+
+## Layouts
+
+| Command | Description |
+| --- | --- |
+| `layout create <name> [--from=<layout>] [--title=<title>] [--lang=<code>]` | Creates an empty layout, or a copy of another one. |
+| `layout delete <name>` | Deletes a layout that no page and no site setting uses. |
+| `layout region add <layout> <region> [--after=<region>\|--before=<region>] [--container=fixed\|fluid]` | Adds a region (a Bootstrap row), at the bottom or next to another region. |
+| `layout region remove <layout> <region> [--force]` | Removes a region and its columns. Page placements into those columns block this unless `--force`. |
+| `layout column add <layout> <region.column> --width=<1–12> [--after=<column>\|--before=<column>] [--menu=<menu>]` | Adds a column to a region. |
+| `layout column remove <layout> <region.column> [--force]` | Removes a column. Page placements into it block this unless `--force`. |
+| `layout place <layout> <column> <content> [<content> …] [--at=<n>]` | Adds default content to a column; every page that does not override the column shows it. |
+| `layout unplace <layout> <column> <content>` | Removes default content from a column. |
+
+Column widths are checked when the batch ends, so a batch can first narrow one column and then add another:
+
+```
+set layout.default.body.main.width 6
+layout column add default body.aside --width=2 --before=main
+```
+
+## Menus
+
+| Command | Description |
+| --- | --- |
+| `menu create <name>` | Creates an empty menu. Show it in a layout column with `set layout.<layout>.<region>.<column>.menu <name>` or `layout column add … --menu=<name>`. |
+| `menu delete <name> [--force]` | Deletes a menu. Layout columns that show it block this unless `--force`. |
+| `menu item add <menu> --label=<label> (--page=<page>\|--url=<url>) [--parent=<item>] [--at=<n>] [--lang=<code>]` | Adds an item that links to a page or a URL, at the top level or below another item. The response names the new item's position. |
+| `menu item remove <menu> <item>` | Removes an item and its children. |
+
+## Languages
+
+| Command | Description |
+| --- | --- |
+| `language add <code> [--default]` | Enables a language (`en`, `hu`, `pt-BR`). |
+| `language default <code>` | Makes an enabled language the default. |
+| `language remove <code> [--force]` | Disables a language. Texts and content versions in it block this unless `--force`, which deletes them. The default language cannot be removed. |
+
+Required texts (page titles, menu labels) must exist in the default language, so a new default language needs those texts first; the batch can add them before switching:
+
+```
+language add hu
+set page.1.title.hu "Kezdőlap"
+set menu.main.items.1.label.hu "Kezdőlap"
+language default hu
+```
 
 ## Message keys
 
