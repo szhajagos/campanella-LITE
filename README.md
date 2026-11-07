@@ -118,7 +118,7 @@ Highlights:
 | Content | `project/content/<name>/<language>.md` | machine name |
 | Menu | `project/menus/<name>.yaml` | machine name |
 
-- A page without an alias is available at `/node/<id>`. An optional, ASCII-only alias such as `/about` gives it a readable URL.
+- A page without an alias is available at `/node/<id>`. An optional, ASCII-only alias such as `/about` gives it a readable URL; `/node/<id>` and any previous aliases then redirect to it.
 - A region is a Bootstrap `row`, a column is a `col-md-N`; content is placed into columns, either as a layout default (header, footer) or per page.
 - Language-dependent fields are stored as language maps, even on single-language sites:
 
