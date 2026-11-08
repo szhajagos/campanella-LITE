@@ -18,7 +18,7 @@ Running it again for an existing user sets a new password. Users are stored in `
 
 | Part | What it does |
 | --- | --- |
-| Commands | A multi-line box for a batch of commands. **Ctrl+Enter** (⌘+Enter) runs it; **Alt+↑ / Alt+↓** step through the history. |
+| Commands | A multi-line box for a batch of commands. **Ctrl+Enter** (⌘+Enter) runs it; **Alt+↑ / Alt+↓** step through the history. After a batch has run, the box is emptied, so pressing Run again cannot repeat it by accident; after a dry run or an error the text stays, to be run for real or corrected. |
 | Dry run | Shows what the batch would change without writing anything (same as `@dry-run`). |
 | Response | One line per command (`Ok.`, `Error:`, skipped), tables from `list`, values from `get`, the rule violations that blocked a batch, and the summary. |
 | History | The last 50 different batches of this user, newest first; click one to put it back into the command box. |

@@ -15,6 +15,11 @@
     const historyBox = document.getElementById('history');
     let historyIndex = -1;
 
+    // Outcomes after which the batch has done its work: the box is emptied,
+    // so pressing Run again cannot repeat it. After a dry run or an error the
+    // text stays, to be run for real or corrected. Alt+↑ brings it back.
+    const finishedOutcomes = ['applied', 'unchanged'];
+
     function historyEntries() {
         return Array.from(historyBox.querySelectorAll('[data-batch]')).map((item) => item.dataset.batch);
     }
@@ -24,6 +29,7 @@
             return;
         }
 
+        const sent = commands.value;
         runButton.disabled = true;
         response.setAttribute('aria-busy', 'true');
 
@@ -32,7 +38,7 @@
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
-                body: JSON.stringify({ commands: commands.value, dry_run: dryRun.checked }),
+                body: JSON.stringify({ commands: sent, dry_run: dryRun.checked }),
             });
 
             if (reply.status === 401 || reply.status === 403) {
@@ -47,6 +53,11 @@
             historyBox.innerHTML = data.history_html;
             document.getElementById('site-name').textContent = data.site_name;
             historyIndex = -1;
+
+            // Leave the box alone if something new was typed while the batch ran.
+            if (finishedOutcomes.includes(data.outcome) && commands.value === sent) {
+                commands.value = '';
+            }
         } catch (error) {
             response.textContent = String(error);
         } finally {

@@ -10,6 +10,10 @@ Added, Changed, Deprecated, Removed, Fixed, Security.
 
 ## [Unreleased]
 
+### Changed
+
+- The admin command box is emptied after a batch has run, so a second click on Run cannot repeat it. After a dry run or an error the text stays; Alt+↑ brings back an emptied batch.
+
 ## [0.1.0] - 2026-11-08
 
 The first release: the complete MVP.
