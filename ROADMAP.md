@@ -48,6 +48,14 @@ Status: **Accepted** = agreed and binding; **Proposed** = current plan, open to 
 | 2026-11-08 | Installer | The web setup runs on `/admin` while there is no admin user and needs a setup key from `config/setup-key.txt`. The command line offers the same with `--init`. Starters exist in English and Hungarian. | Accepted |
 | 2026-11-08 | Hosting | Where the document root cannot be `public/`, a root `.htaccess` passes every request to `public/` and refuses everything without `mod_rewrite`. | Accepted |
 | 2026-11-08 | Releases | A version tag (`v0.1.0`) builds a zip with the production dependencies; `composer.lock` is created by a manually run workflow and committed, because the maintainer works without local PHP. | Accepted |
+| 2026-11-08 | Files | All files (images, documents, audio, video) go to one file repository, whether an admin, the CLI or later the AI module adds them. Every file gets a numeric id that never changes; the stored file name is random and independent of the id and of the name shown to users. | Accepted |
+| 2026-11-08 | Files | Uploading is not a command: it only adds a file that nothing uses yet, so it changes nothing on the website. It is logged ("uploaded"), and its response shows the file's id and data. Everything after that (describing, renaming, using, deleting) is a command, logged and undoable. There is no `@upload` placeholder: a batch refers to files by their id once they are uploaded. | Accepted |
+| 2026-11-08 | Files | The keyword is `file` (`list files`, `file describe`, `file rename`, `file delete`, `file purge`); the component is called `FileRepository`. | Accepted |
+| 2026-11-08 | Files | `file delete` archives: the file disappears from the website and the lists, but `undo` brings it back. Files in use are only archived with `--force`. `file purge` removes archived files for good. | Accepted |
+| 2026-11-08 | Files | The manifest of each file (`project/files/manifest/{id}.yaml`) holds file name, stored name, MIME type, extension, size, width and height (images and video), description per language, upload time and uploader (from the session, `cli` on the command line). Files are stored under `project/files/`, so `config/` and `project/` remain a complete backup. | Accepted |
+| 2026-11-08 | Files | Allowed: images (JPEG, PNG, WebP, GIF), PDF, Office documents (DOCX, XLSX, PPTX), audio (WAV, AIFF, FLAC, MP3, Opus, Ogg), video (MP4, WebM). Never files that can carry scripts or macros (DOCM/XLSM/PPTM, legacy DOC/XLS/PPT, HTML, PHP). The type is checked from the content, not the extension. Limits: 10 MB, video 100 MB. | Accepted |
+| 2026-11-08 | Files | SVG only later, if at all: the established PHP sanitiser is GPL-licensed, so it would need an own strict allowlist check that refuses anything else, plus a sandboxing Content-Security-Policy on served SVG files. | Proposed |
+| 2026-11-08 | Files | Image sizes and WebP are derived files, not separate files: one id per upload. They are generated from the original (with GD, which also drops EXIF and GPS data) into the public directory, can always be regenerated, and are never stored in the manifest. Content uses `file:1042`; the generator picks the sizes (`srcset`, `<picture>` with WebP when the server supports it). | Proposed |
 | 2026-11-07 | URLs | When an alias changes, the old alias redirects (301) to the page's current alias, until another page takes the old alias. Redirects point to page ids, so renaming twice never creates a chain. | Accepted |
 
 ## MVP (0.1.0)
@@ -61,6 +69,11 @@ Built from the inside out: storage and command interpreter first, user interface
 - [x] **M5 – Admin dashboard:** login, command box, response box, command history, status bar.
 - [x] **M6 – Finishing:** command log, `undo`, installer, starter project with example pages, command language reference, `composer.lock` and release workflows.
 
+## 0.2.0 – Files
+
+- [ ] **M7 – File repository:** manifest and storage, numeric ids, type and size checks, upload in the admin (drag and drop into the command box, response with the file's data) and on the CLI, `list files` with filters, `get`/`set`, `file describe`, `file rename`, `file delete` (archive), `file purge`, undo of file commands, reference checks.
+- [ ] **M8 – Files on the website:** `file:{id}` in Markdown, rendering per type (image with alt text and caption, audio, video, download link), image sizes and WebP with GD, file panel with thumbnails in the admin, versioned asset URLs (no more Ctrl+F5 after updates).
+
 ## After the MVP
 
 Not yet scheduled; order to be decided.
@@ -70,7 +83,8 @@ Not yet scheduled; order to be decided.
 - **More message translations** besides English and Hungarian.
 - **HTML content** alongside Markdown.
 - **Multiple users** with restricted, role-based command permissions.
-- **Images and media management.**
+- **System page** `/admin/system`: installed version, PHP version, required and optional extensions (e.g. WebP support), PHP limits (`upload_max_filesize`, `max_execution_time` …), languages.
+- **SVG files**, if they can be made safe (see decisions).
 - **More web servers:** Nginx configuration.
 - **Themes:** exchangeable theme directories.
 - **Smarter cache invalidation:** remove only the pages affected by a change.
