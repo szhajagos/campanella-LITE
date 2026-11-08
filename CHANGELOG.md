@@ -47,7 +47,15 @@ Added, Changed, Deprecated, Removed, Fixed, Security.
 - `build` and `cache clear` commands, run after the batch has been written.
 - Development router for PHP's built-in web server (`app/dev-router.php`).
 - Developer documentation of the public website: `docs/generator.md`.
+- Admin dashboard at `/admin`: command box (Ctrl+Enter to run, Alt+↑/↓ for history), dry-run switch, response box, per-user history of the last 50 batches, page list with public and preview links, status bar.
+- Page preview for admins, drafts included: `/admin/preview/{id}[/{language}]`.
+- Admin users in `config/users.yaml`, created with `bin/campanella --add-user=<name>`.
+- `user set locale` command: each admin chooses the language of their messages.
+- Developer documentation: `docs/admin.md`, `docs/security.md`.
 
 ### Security
 
 - The front controller answers only `GET` and `HEAD`, refuses paths with `..`, `//`, backslashes or control characters, and never shows error details to visitors.
+- Admin passwords are stored as `password_hash` hashes (at least 10 characters); failed logins are throttled per address (5 per 15 minutes) and logged to `var/log/auth.log`.
+- Admin sessions: dedicated `HttpOnly`, `SameSite=Strict` cookie limited to `/admin` (`Secure` on HTTPS), new session id at login, 30-minute idle timeout and 12-hour maximum.
+- CSRF tokens on every state-changing admin request; strict Content Security Policy, no framing, `no-store` caching for the admin.

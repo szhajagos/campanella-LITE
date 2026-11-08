@@ -1,0 +1,77 @@
+/* Campanella Lite – admin dashboard */
+
+.admin {
+    min-height: 100vh;
+    background: var(--bs-tertiary-bg);
+}
+
+.login {
+    max-width: 26rem;
+    padding-top: 12vh;
+}
+
+.commands {
+    min-height: 18rem;
+    font-family: var(--bs-font-monospace);
+    font-size: .9rem;
+    resize: vertical;
+    tab-size: 4;
+}
+
+.response {
+    font-family: var(--bs-font-monospace);
+    font-size: .85rem;
+    max-height: 32rem;
+    overflow: auto;
+}
+
+.response-line + .response-line {
+    margin-top: .25rem;
+}
+
+.line-number {
+    color: var(--bs-secondary-color);
+}
+
+.line-ok strong {
+    color: var(--bs-success-text-emphasis);
+}
+
+.line-error {
+    color: var(--bs-danger-text-emphasis);
+}
+
+.line-skipped {
+    color: var(--bs-secondary-color);
+}
+
+.response-output,
+.response-table {
+    margin: .25rem 0 .5rem 2rem;
+    font-size: .8rem;
+}
+
+.response-output {
+    padding: .5rem;
+    background: var(--bs-tertiary-bg);
+    border-radius: var(--bs-border-radius);
+    white-space: pre-wrap;
+}
+
+.response-table {
+    width: auto;
+}
+
+.history {
+    max-height: 18rem;
+    overflow: auto;
+}
+
+.history-item code {
+    white-space: pre-wrap;
+    color: inherit;
+}
+
+.status-bar {
+    color: var(--bs-secondary-color);
+}

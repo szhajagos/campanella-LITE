@@ -39,6 +39,9 @@ Status: **Accepted** = agreed and binding; **Proposed** = current plan, open to 
 | 2026-11-08 | Publishing | Every committed batch clears all generated pages (MVP); pages are generated again on their next visit or with `build`. | Accepted |
 | 2026-11-08 | Publishing | Generated files are tracked in a manifest; the generator never deletes or overwrites files it did not create. | Accepted |
 | 2026-11-08 | Themes | Built-in themes ship with the code (`app/themes/{name}/templates`, assets in `public/assets/themes/{name}`); Bootstrap is bundled, not loaded from a CDN. | Accepted |
+| 2026-11-08 | Admin | Admin users live in `config/users.yaml`, outside the web root and the project; the first user is created with `bin/campanella --add-user`, a web setup comes with the installer. | Accepted |
+| 2026-11-08 | Admin | The dashboard is server-rendered (Twig) with a small framework-free script; commands run through the same interpreter and JSON endpoint the AI module will use. | Accepted |
+| 2026-11-08 | Admin | History recall uses Alt+↑/↓, because plain arrow keys move the cursor in the multi-line command box. | Accepted |
 | 2026-11-07 | URLs | When an alias changes, the old alias redirects (301) to the page's current alias, until another page takes the old alias. Redirects point to page ids, so renaming twice never creates a chain. | Accepted |
 
 ## MVP (0.1.0)
@@ -49,7 +52,7 @@ Built from the inside out: storage and command interpreter first, user interface
 - [x] **M2 – Command interpreter:** lexer and parser, command registry, `get` / `set` / `list` / `help`, batch transactions, `@dry-run`, text and JSON responses, message catalogue (English).
 - [x] **M3 – Entity commands:** `page`, `content`, `layout`, `menu` and `language` commands and `check`.
 - [x] **M4 – Generator:** default Bootstrap 5 theme in Twig, front controller, `.htaccess`, cache manifest, alias redirects, `build`, `cache clear`.
-- [ ] **M5 – Admin dashboard:** login, command box, response box, command history, status bar.
+- [x] **M5 – Admin dashboard:** login, command box, response box, command history, status bar.
 - [ ] **M6 – Finishing:** command log, `undo`, installer, starter project with example pages, command language reference, committed `composer.lock`.
 
 ## After the MVP

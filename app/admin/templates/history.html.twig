@@ -1,0 +1,5 @@
+{% for batch in history %}
+    <button type="button" class="list-group-item list-group-item-action history-item" data-batch="{{ batch }}"><code>{{ batch|length > 120 ? batch|slice(0, 120) ~ '…' : batch }}</code></button>
+{% else %}
+    <p class="text-body-secondary small m-3">{{ t('dashboard.history_empty') }}</p>
+{% endfor %}

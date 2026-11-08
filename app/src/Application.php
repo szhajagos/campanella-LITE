@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Campanella\Lite;
 
+use Campanella\Lite\Admin\AdminController;
+use Campanella\Lite\Admin\AuthLog;
+use Campanella\Lite\Admin\History;
+use Campanella\Lite\Admin\LoginThrottle;
+use Campanella\Lite\Admin\Session\Session;
+use Campanella\Lite\Admin\UserRepository;
 use Campanella\Lite\Command\CommandRegistry;
 use Campanella\Lite\Command\Format\JsonFormatter;
 use Campanella\Lite\Command\Format\TextFormatter;
@@ -36,6 +42,7 @@ use Campanella\Lite\Command\Handler\Page\PagePlacementCommand;
 use Campanella\Lite\Command\Handler\Page\PageStatusCommand;
 use Campanella\Lite\Command\Handler\RedirectRemoveCommand;
 use Campanella\Lite\Command\Handler\SetCommand;
+use Campanella\Lite\Command\Handler\UserLocaleCommand;
 use Campanella\Lite\Command\Interpreter;
 use Campanella\Lite\Http\FrontController;
 use Campanella\Lite\I18n\Translator;
@@ -47,6 +54,8 @@ use Campanella\Lite\Render\SiteBuilder;
 use Campanella\Lite\Routing\Router;
 use Campanella\Lite\Storage\FileStore;
 use Campanella\Lite\Storage\WriteLock;
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
 
 /**
  * Wires the services of one installation together.
@@ -85,6 +94,35 @@ final class Application
         return new FrontController($this->repository(), $this->lock(), new Router(), $this->renderer(), $this->pageCache());
     }
 
+    /**
+     * @param (\Closure(): int)|null $clock
+     */
+    public function adminController(Session $session, ?\Closure $clock = null): AdminController
+    {
+        $var = new FileStore($this->paths->var());
+
+        return new AdminController(
+            $this,
+            $this->users(),
+            $session,
+            new LoginThrottle($var),
+            new AuthLog($this->paths->var() . '/log/auth.log'),
+            new History($var),
+            new Environment(new FilesystemLoader(dirname(__DIR__) . '/admin/templates'), [
+                'autoescape' => 'html',
+                'strict_variables' => true,
+                'cache' => $this->paths->var() . '/cache/twig-admin',
+                'auto_reload' => true,
+            ]),
+            $clock,
+        );
+    }
+
+    public function users(): UserRepository
+    {
+        return new UserRepository(new FileStore($this->paths->config()));
+    }
+
     public function repository(): ProjectRepository
     {
         return new ProjectRepository(new FileStore($this->paths->project()));
@@ -121,6 +159,7 @@ final class Application
                 new BuildCommand($this->siteBuilder()),
                 new CacheClearCommand($this->pageCache()),
                 new RedirectRemoveCommand(),
+                new UserLocaleCommand($this->users(), $this->translator()),
                 new PageCreateCommand(),
                 new PageDeleteCommand(),
                 new PageAliasCommand(),

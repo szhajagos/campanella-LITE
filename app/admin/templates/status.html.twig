@@ -1,0 +1,10 @@
+<div class="container-fluid small py-2 d-flex flex-wrap gap-3">
+{% if project_error %}
+    <span class="text-danger">{{ t('status.project_error') }} {{ project_error }}</span>
+{% elseif status %}
+    <span>{{ t('status.pages', {count: status.pages, published: status.published, drafts: status.drafts}) }}</span>
+    <span>{{ t('status.generated', {count: status.generated}) }}</span>
+    <span>{{ t('status.languages', {languages: status.languages}) }}</span>
+    {% if status.changed %}<span>{{ t('status.changed', {time: status.changed}) }}</span>{% endif %}
+{% endif %}
+</div>

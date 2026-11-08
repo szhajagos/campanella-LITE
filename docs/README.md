@@ -10,13 +10,14 @@ This directory holds the developer documentation of Campanella Lite. It grows to
 | [data-model.md](data-model.md) | Entities, file formats, identifiers, validation rules and violation codes |
 | [command-language.md](command-language.md) | Syntax, batches, paths, responses, commands, developer CLI |
 | [generator.md](generator.md) | Public addresses, redirects, page cache, rendering, themes, web server setup |
+| [admin.md](admin.md) | Admin dashboard, first user, endpoints |
+| [security.md](security.md) | How the public website, the admin and the files are protected |
 | [development.md](development.md) | Setup, checks, CI, conventions |
 
 ## Planned documents
 
 | Document | Describes | Added with |
 | --- | --- | --- |
-| `security.md` | Authentication, file access, logging, undo | M5–M6 |
 
 ## User guide
 

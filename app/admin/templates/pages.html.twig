@@ -1,0 +1,23 @@
+{% if pages %}
+<div class="table-responsive">
+    <table class="table table-sm mb-0 align-middle">
+        <thead><tr><th scope="col">{{ t('pages.id') }}</th><th scope="col">{{ t('pages.title') }}</th><th scope="col">{{ t('pages.address') }}</th><th scope="col">{{ t('pages.status') }}</th><th scope="col"><span class="visually-hidden">{{ t('pages.actions') }}</span></th></tr></thead>
+        <tbody>
+        {% for page in pages %}
+            <tr>
+                <td>{{ page.id }}</td>
+                <td>{{ page.title }}</td>
+                <td><code>{{ page.url }}</code></td>
+                <td>{% if page.published %}<span class="badge text-bg-success">{{ t('pages.published') }}</span>{% else %}<span class="badge text-bg-secondary">{{ t('pages.draft') }}</span>{% endif %}</td>
+                <td class="text-end text-nowrap">
+                    {% if page.published %}<a href="{{ page.url }}" target="_blank" rel="noopener">{{ t('pages.view') }}</a> · {% endif %}
+                    <a href="{{ page.preview }}" target="_blank" rel="noopener">{{ t('pages.preview') }}</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="text-body-secondary small m-3">{{ t('pages.none') }}</p>
+{% endif %}

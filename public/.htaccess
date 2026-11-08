@@ -14,6 +14,9 @@ DirectorySlash Off
     # Hidden files are never served
     RewriteRule (^|/)\. - [F,L]
 
+    # The admin area
+    RewriteRule ^admin(?:/.*)?$ admin/index.php [L]
+
     # Existing files: assets and generated pages
     RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^ - [L]

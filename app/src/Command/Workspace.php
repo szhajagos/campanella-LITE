@@ -27,7 +27,10 @@ final class Workspace
     /** @var array<string, EntityRef> */
     private array $touched = [];
 
-    public function __construct(private readonly Project $original)
+    /**
+     * @param string|null $user the admin running the batch; null on the command line
+     */
+    public function __construct(private readonly Project $original, public readonly ?string $user = null)
     {
         $this->project = $original;
     }

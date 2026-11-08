@@ -35,7 +35,7 @@ The rule that holds the design together: **the command interpreter is the only c
 | Routing and redirects | `Campanella\Lite\Routing` | M4 | Done |
 | Renderer, theme, page cache, build | `Campanella\Lite\Render` | M4 | Done |
 | Front controller | `Campanella\Lite\Http` | M4 | Done |
-| Admin dashboard | `Campanella\Lite\Admin` | M5 | Planned |
+| Admin dashboard, users, login security | `Campanella\Lite\Admin` | M5 | Done |
 
 ## Layers built in M1
 
@@ -96,6 +96,10 @@ Model objects offer typed `with…()` methods, so a handler changes an entity by
 - **`Http\FrontController`** answers requests the web server could not serve from a file.
 
 Commands that touch files outside the project (`build`, `cache clear`) return deferred work, which the interpreter runs only after the batch has been written. See [generator.md](generator.md).
+
+### Admin (M5)
+
+`Admin\AdminController` handles everything under `/admin` (login, logout, running batches, previews) on top of a small `Http\Request`/`Http\Response` pair and a `Session` interface, so it is tested without a web server. Users live in `config/users.yaml` (`Admin\UserRepository`); `LoginThrottle`, `AuthLog` and `History` keep their data in `var/`. The dashboard is server-rendered Twig with a small script (`public/assets/admin/admin.js`). The interpreter receives the logged-in user's name, for commands about the user's own settings. See [admin.md](admin.md) and [security.md](security.md).
 
 ### I18n (`Campanella\Lite\I18n`)
 

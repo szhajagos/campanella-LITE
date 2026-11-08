@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Campanella\Lite\Cli;
 
+use Campanella\Lite\Admin\User;
 use Campanella\Lite\Application;
 use Campanella\Lite\Command\Result\Outcome;
 use Campanella\Lite\Paths;
+use InvalidArgumentException;
 use Throwable;
 
 /**
@@ -35,6 +37,9 @@ final class CliApplication
               --dry-run             Show what would change without writing anything
               --json                Print the result as JSON
               --locale=<locale>     Language of the messages (default: en)
+              --add-user=<name>     Create an admin user, or set a new password for an
+                                    existing one. The password is read from standard
+                                    input (at least 10 characters).
           -h, --help                Show this help
 
         Exit codes: 0 success, 1 batch rejected or invalid, 2 usage or system error.
@@ -73,6 +78,10 @@ final class CliApplication
             return self::EXIT_OK;
         }
 
+        if ($arguments['add-user'] !== null) {
+            return $this->addUser($arguments['root'], $arguments['add-user'], $arguments['locale']);
+        }
+
         try {
             $input = $this->input($arguments);
             $application = new Application(new Paths($arguments['root']));
@@ -106,7 +115,7 @@ final class CliApplication
     /**
      * @param list<string> $args
      *
-     * @return array{root: string, execute: ?string, file: ?string, dry-run: bool, json: bool, locale: string, help: bool}
+     * @return array{root: string, execute: ?string, file: ?string, dry-run: bool, json: bool, locale: string, help: bool, add-user: ?string}
      */
     private function parseArguments(array $args): array
     {
@@ -118,6 +127,7 @@ final class CliApplication
             'json' => false,
             'locale' => 'en',
             'help' => false,
+            'add-user' => null,
         ];
 
         for ($i = 0; $i < count($args); $i++) {
@@ -133,6 +143,8 @@ final class CliApplication
                 $result['execute'] = $args[++$i] ?? throw new UsageError('-e needs a value.');
             } elseif (str_starts_with($arg, '--execute=')) {
                 $result['execute'] = substr($arg, strlen('--execute='));
+            } elseif (str_starts_with($arg, '--add-user=')) {
+                $result['add-user'] = substr($arg, strlen('--add-user='));
             } elseif (str_starts_with($arg, '--root=')) {
                 $result['root'] = substr($arg, strlen('--root='));
             } elseif (str_starts_with($arg, '--locale=')) {
@@ -157,6 +169,41 @@ final class CliApplication
         }
 
         return $result;
+    }
+
+    private function addUser(string $root, string $name, string $locale): int
+    {
+        try {
+            $application = new Application(new Paths($root));
+            $users = $application->users();
+            $interactive = stream_isatty($this->stdin);
+
+            if ($interactive) {
+                fwrite($this->stderr, 'Password for ' . $name . ': ');
+                @shell_exec('stty -echo 2>/dev/null');
+            }
+
+            $password = rtrim((string) fgets($this->stdin), "\r\n");
+
+            if ($interactive) {
+                @shell_exec('stty echo 2>/dev/null');
+                fwrite($this->stderr, "\n");
+            }
+
+            if (mb_strlen($password) < User::MIN_PASSWORD_LENGTH) {
+                throw new UsageError(sprintf('The password must be at least %d characters long.', User::MIN_PASSWORD_LENGTH));
+            }
+
+            $existing = $users->find($name);
+            $users->save($existing === null ? User::create($name, $password, $locale) : $existing->withPassword($password));
+            fwrite($this->stdout, sprintf("%s the admin user \"%s\".\n", $existing === null ? 'Created' : 'Updated the password of', $name));
+
+            return self::EXIT_OK;
+        } catch (UsageError | InvalidArgumentException $error) {
+            fwrite($this->stderr, $error->getMessage() . "\n");
+
+            return self::EXIT_USAGE;
+        }
     }
 
     /**

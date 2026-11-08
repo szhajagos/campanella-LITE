@@ -43,7 +43,7 @@ PHP's built-in web server with the development router behaves like the Apache co
 php -S localhost:8000 -t public app/dev-router.php
 ```
 
-It needs a `project/` directory in the repository root (ignored by git). The sample project is a good start: `cp -r tests/Fixtures/valid-project project`. Generated pages appear in `public/` and are ignored by git as well. See [generator.md](generator.md).
+The admin is at `/admin`; create a user first with `bin/campanella --add-user=admin` (stored in `config/`, ignored by git). It needs a `project/` directory in the repository root (ignored by git). The sample project is a good start: `cp -r tests/Fixtures/valid-project project`. Generated pages appear in `public/` and are ignored by git as well. See [generator.md](generator.md).
 
 ## Directory layout
 
@@ -52,7 +52,9 @@ app/src/          # Campanella\Lite\ – application code (PSR-4)
 app/translations/ # Message catalogues (messages.{locale}.yaml)
 app/themes/       # Built-in themes (Twig templates)
 app/dev-router.php# Router for PHP's built-in web server
-public/           # Web root: front controller, .htaccess, assets, generated pages
+app/admin/        # Twig templates of the admin dashboard
+public/           # Web root: front controller, admin entry, .htaccess, assets, generated pages
+config/           # Admin users (not committed)
 bin/campanella    # Developer CLI
 app/vendor/       # Composer dependencies (not committed)
 tests/            # Campanella\Lite\Tests\ – PHPUnit tests

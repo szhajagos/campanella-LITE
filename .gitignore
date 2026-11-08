@@ -5,14 +5,17 @@
 # Runtime data
 /var/
 
-# The website description of an installation (not part of the CMS code)
+# The website description and the admin users of an installation
+# (not part of the CMS code)
 /project/
+/config/
 
-# Generated pages in the web root; only the front controller, the
-# Apache configuration and the assets belong to the repository
+# Generated pages in the web root; only the front controller, the admin
+# entry point, the Apache configuration and the assets belong to the repository
 /public/*
 !/public/index.php
 !/public/.htaccess
+!/public/admin/
 !/public/assets/
 
 # Tools

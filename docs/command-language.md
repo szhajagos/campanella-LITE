@@ -278,6 +278,12 @@ language default hu
 
 `build` and `cache clear` run after the batch has been written, so they see its changes; they do nothing on a dry run or in a rejected batch. Every batch that changes the website clears the generated pages by itself. Changing or removing an alias records a redirect from the old address automatically. See [generator.md](generator.md).
 
+## Your settings
+
+| Command | Description |
+| --- | --- |
+| `user set locale <locale>` | Sets the language of your own messages in the admin dashboard. Only works there, for the logged-in user. |
+
 ## Message keys
 
 Responses use these key families; the full list with texts is in `app/translations/messages.en.yaml`.

@@ -45,7 +45,10 @@ final class Interpreter
     ) {
     }
 
-    public function run(string $input, bool $dryRun = false): BatchResult
+    /**
+     * @param string|null $user the admin running the batch, for commands about the user's own settings
+     */
+    public function run(string $input, bool $dryRun = false, ?string $user = null): BatchResult
     {
         $batch = $this->parser->parse($input);
         $dryRun = $dryRun || $batch->dryRun;
@@ -58,10 +61,10 @@ final class Interpreter
             return new BatchResult(Outcome::Unchanged, [], new Message('batch.empty'), $dryRun);
         }
 
-        return $this->lock->synchronized(fn (): BatchResult => $this->execute($batch, $dryRun));
+        return $this->lock->synchronized(fn (): BatchResult => $this->execute($batch, $dryRun, $user));
     }
 
-    private function execute(ParsedBatch $batch, bool $dryRun): BatchResult
+    private function execute(ParsedBatch $batch, bool $dryRun, ?string $user): BatchResult
     {
         try {
             $project = $this->repository->load();
@@ -74,7 +77,7 @@ final class Interpreter
             );
         }
 
-        $workspace = new Workspace($project);
+        $workspace = new Workspace($project, $user);
         $lines = [];
         $deferred = [];
         $failed = false;

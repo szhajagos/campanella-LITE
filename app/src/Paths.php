@@ -50,6 +50,12 @@ final class Paths
         return $this->root . '/public';
     }
 
+    /** Installation settings that are not part of the website: admin users. */
+    public function config(): string
+    {
+        return $this->root . '/config';
+    }
+
     /** The file whose lock serialises every write to the project. */
     public function writeLock(): string
     {

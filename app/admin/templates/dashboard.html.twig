@@ -1,0 +1,66 @@
+{% extends 'layout.html.twig' %}
+
+{% block title %}{{ site_name }} – Campanella Lite{% endblock %}
+
+{% block body %}
+<nav class="navbar navbar-dark bg-dark navbar-expand">
+    <div class="container-fluid">
+        <span class="navbar-brand">Campanella Lite</span>
+        <span class="navbar-text text-truncate me-auto">{{ site_name }}</span>
+        <a class="btn btn-sm btn-outline-light me-2" href="/" target="_blank" rel="noopener">{{ t('dashboard.view_site') }}</a>
+        <span class="navbar-text me-2 small">{{ user }}</span>
+        <form method="post" action="/admin/logout" class="d-inline">
+            <input type="hidden" name="_csrf" value="{{ csrf }}">
+            <button class="btn btn-sm btn-outline-light" type="submit">{{ t('dashboard.logout') }}</button>
+        </form>
+    </div>
+</nav>
+
+<div id="status" class="status-bar border-bottom bg-body-tertiary">{% include 'status.html.twig' %}</div>
+
+<main class="container-fluid py-3">
+    <div class="row g-3">
+        <section class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center">
+                    <h2 class="h6 mb-0 me-auto"><label for="commands">{{ t('dashboard.commands') }}</label></h2>
+                    <span class="small text-body-secondary">{{ t('dashboard.shortcuts') }}</span>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <textarea id="commands" class="form-control commands flex-grow-1" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="help"></textarea>
+                    <div class="d-flex align-items-center gap-3 mt-3">
+                        <button id="run" class="btn btn-primary" type="button">{{ t('dashboard.run') }}</button>
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="checkbox" id="dry-run">
+                            <label class="form-check-label" for="dry-run">{{ t('dashboard.dry_run') }}</label>
+                        </div>
+                        <button id="clear" class="btn btn-link ms-auto" type="button">{{ t('dashboard.clear') }}</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header"><h2 class="h6 mb-0">{{ t('dashboard.response') }}</h2></div>
+                <div class="card-body">
+                    <div id="response" class="response" aria-live="polite">
+                        <p class="text-body-secondary">{{ t('dashboard.response_empty') }}</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="col-lg-6">
+            <div class="card">
+                <div class="card-header"><h2 class="h6 mb-0">{{ t('dashboard.history') }}</h2></div>
+                <div id="history" class="list-group list-group-flush history">{% include 'history.html.twig' %}</div>
+            </div>
+        </section>
+        <section class="col-lg-6">
+            <div class="card">
+                <div class="card-header"><h2 class="h6 mb-0">{{ t('dashboard.pages') }}</h2></div>
+                <div id="pages">{% include 'pages.html.twig' %}</div>
+            </div>
+        </section>
+    </div>
+</main>
+{% endblock %}

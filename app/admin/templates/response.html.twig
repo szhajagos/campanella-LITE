@@ -1,0 +1,28 @@
+<div class="response-lines">
+{% for line in lines %}
+    <div class="response-line line-{{ line.status }}">
+        <span class="line-number">[{{ line.line }}]</span>
+        {% if line.status == 'ok' %}<strong>{{ t('response.ok') }}</strong>{% elseif line.status == 'error' %}<strong>{{ t('response.error') }}</strong>{% endif %}
+        <span class="line-message">{{ line.message }}</span>
+        {% if line.output %}
+            {% if line.output.type == 'table' %}
+            <div class="table-responsive"><table class="table table-sm table-bordered response-table">
+                <thead><tr>{% for column in line.output.columns %}<th scope="col">{{ column }}</th>{% endfor %}</tr></thead>
+                <tbody>{% for row in line.output.rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+            </table></div>
+            {% elseif line.output.type == 'lines' %}
+            <pre class="response-output">{{ line.output.lines|join("\n") }}</pre>
+            {% elseif line.output.text %}
+            <pre class="response-output">{{ line.output.text }}</pre>
+            {% endif %}
+        {% endif %}
+    </div>
+{% endfor %}
+{% if violations %}
+    <div class="alert alert-danger mt-2 mb-0">
+        <p class="mb-1">{{ t('response.violations') }}</p>
+        <ul class="mb-0">{% for violation in violations %}<li>{{ violation.text }} <code>{{ violation.path }}</code></li>{% endfor %}</ul>
+    </div>
+{% endif %}
+    <p class="response-summary {{ ok ? 'text-success-emphasis' : 'text-danger-emphasis' }} mt-2 mb-0">→ {{ summary }}</p>
+</div>
