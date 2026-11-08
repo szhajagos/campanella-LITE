@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Campanella\Lite\Validation;
 
+use Campanella\Lite\Files\FileReferences;
+use Campanella\Lite\Files\FileRepository;
+use Campanella\Lite\Files\FileTypes;
 use Campanella\Lite\Model\Column;
 use Campanella\Lite\Model\Content;
+use Campanella\Lite\Model\File;
 use Campanella\Lite\Model\Layout;
 use Campanella\Lite\Model\LocalizedText;
 use Campanella\Lite\Model\Menu;
@@ -72,6 +76,10 @@ final class ProjectValidator
 
         foreach ($project->menus as $menu) {
             $this->validateMenu($menu, $project);
+        }
+
+        foreach ($project->files as $file) {
+            $this->validateFile($file, $project);
         }
 
         foreach ($project->redirects->toArray() as $path => $target) {
@@ -280,7 +288,30 @@ final class ProjectValidator
             if (trim($translation->title) === '') {
                 $this->add('content.missing_title', $base . '.' . $language . '.title');
             }
+
+            foreach (FileReferences::in($translation->body) as $id) {
+                if ($project->file($id) === null) {
+                    $this->add('content.unknown_file', $base . '.' . $language, ['file' => $id]);
+                }
+            }
         }
+    }
+
+    private function validateFile(File $file, Project $project): void
+    {
+        $base = 'file.' . $file->id;
+
+        if (!FileTypes::isKnown($file->extension)) {
+            $this->add('file.unknown_type', $base . '.extension', ['extension' => $file->extension]);
+        } elseif (!File::isValidFilename($file->filename, $file->extension)) {
+            $this->add('file.invalid_filename', $base . '.filename', ['filename' => $file->filename, 'extension' => $file->extension, 'max' => File::MAX_FILENAME_LENGTH]);
+        }
+
+        if (preg_match(FileRepository::STORED_NAME_PATTERN, $file->storedFilename) !== 1) {
+            $this->add('file.invalid_stored_name', $base . '.stored_filename');
+        }
+
+        $this->checkLanguages($file->description, $base . '.description', $project);
     }
 
     private function validateMenu(Menu $menu, Project $project): void

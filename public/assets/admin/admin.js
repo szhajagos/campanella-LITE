@@ -13,7 +13,15 @@
     const dryRun = document.getElementById('dry-run');
     const response = document.getElementById('response');
     const historyBox = document.getElementById('history');
+    const attachments = document.getElementById('attachments');
+    const attachmentList = attachments.querySelector('ul');
+    const fileInput = document.getElementById('file-input');
     let historyIndex = -1;
+
+    // Files dropped on the command box or chosen with "Attach files". They are
+    // uploaded when the batch runs, before its commands; the response gives
+    // their ids, which later commands can use.
+    let pending = [];
 
     // Outcomes after which the batch has done its work: the box is emptied,
     // so pressing Run again cannot repeat it. After a dry run or an error the
@@ -24,40 +32,95 @@
         return Array.from(historyBox.querySelectorAll('[data-batch]')).map((item) => item.dataset.batch);
     }
 
+    function renderAttachments() {
+        attachmentList.replaceChildren(...pending.map((file, index) => {
+            const item = document.createElement('li');
+            item.className = 'list-inline-item attachment';
+            item.textContent = file.name;
+
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.textContent = '×';
+            remove.title = attachmentList.dataset.removeLabel;
+            remove.setAttribute('aria-label', attachmentList.dataset.removeLabel + ': ' + file.name);
+            remove.addEventListener('click', () => {
+                pending.splice(index, 1);
+                renderAttachments();
+            });
+
+            item.append(remove);
+            return item;
+        }));
+        attachments.hidden = pending.length === 0;
+    }
+
+    function attach(files) {
+        pending = pending.concat(Array.from(files));
+        renderAttachments();
+    }
+
+    async function post(url, options) {
+        const reply = await fetch(url, { method: 'POST', credentials: 'same-origin', ...options });
+
+        if (reply.status === 401 || reply.status === 403) {
+            window.location.reload();
+            return null;
+        }
+
+        return reply.json();
+    }
+
     async function run() {
-        if (commands.value.trim() === '' || runButton.disabled) {
+        if ((commands.value.trim() === '' && pending.length === 0) || runButton.disabled) {
             return;
         }
 
         const sent = commands.value;
+        const files = pending;
+        let html = '';
         runButton.disabled = true;
         response.setAttribute('aria-busy', 'true');
 
         try {
-            const reply = await fetch('/admin/run', {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
-                body: JSON.stringify({ commands: sent, dry_run: dryRun.checked }),
-            });
+            if (files.length > 0) {
+                const form = new FormData();
+                files.forEach((file) => form.append('files[]', file, file.name));
+                const uploaded = await post('/admin/upload', { headers: { 'X-CSRF-Token': csrf }, body: form });
 
-            if (reply.status === 401 || reply.status === 403) {
-                window.location.reload();
-                return;
+                if (uploaded === null) {
+                    return;
+                }
+
+                html += uploaded.html;
+                document.getElementById('status').innerHTML = uploaded.status_html;
+                pending = pending.filter((file) => !files.includes(file));
+                renderAttachments();
             }
 
-            const data = await reply.json();
-            response.innerHTML = data.html;
-            document.getElementById('status').innerHTML = data.status_html;
-            document.getElementById('pages').innerHTML = data.pages_html;
-            historyBox.innerHTML = data.history_html;
-            document.getElementById('site-name').textContent = data.site_name;
-            historyIndex = -1;
+            if (sent.trim() !== '') {
+                const data = await post('/admin/run', {
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+                    body: JSON.stringify({ commands: sent, dry_run: dryRun.checked }),
+                });
 
-            // Leave the box alone if something new was typed while the batch ran.
-            if (finishedOutcomes.includes(data.outcome) && commands.value === sent) {
-                commands.value = '';
+                if (data === null) {
+                    return;
+                }
+
+                html += data.html;
+                document.getElementById('status').innerHTML = data.status_html;
+                document.getElementById('pages').innerHTML = data.pages_html;
+                historyBox.innerHTML = data.history_html;
+                document.getElementById('site-name').textContent = data.site_name;
+                historyIndex = -1;
+
+                // Leave the box alone if something new was typed while the batch ran.
+                if (finishedOutcomes.includes(data.outcome) && commands.value === sent) {
+                    commands.value = '';
+                }
             }
+
+            response.innerHTML = html;
         } catch (error) {
             response.textContent = String(error);
         } finally {
@@ -79,8 +142,34 @@
 
     runButton.addEventListener('click', run);
 
+    document.getElementById('attach').addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
+        attach(fileInput.files);
+        fileInput.value = '';
+        commands.focus();
+    });
+
+    commands.addEventListener('dragover', (event) => {
+        if (event.dataTransfer && Array.from(event.dataTransfer.types).includes('Files')) {
+            event.preventDefault();
+            commands.classList.add('dragover');
+        }
+    });
+    commands.addEventListener('dragleave', () => commands.classList.remove('dragover'));
+    commands.addEventListener('drop', (event) => {
+        commands.classList.remove('dragover');
+
+        if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+            event.preventDefault();
+            attach(event.dataTransfer.files);
+            commands.focus();
+        }
+    });
+
     document.getElementById('clear').addEventListener('click', () => {
         commands.value = '';
+        pending = [];
+        renderAttachments();
         historyIndex = -1;
         commands.focus();
     });

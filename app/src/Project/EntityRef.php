@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Campanella\Lite\Project;
 
 /**
- * Names one stored entity: the site, a layout, a page, a content item or a menu.
+ * Names one stored entity: the site, a layout, a page, a content item, a menu,
+ * the redirects or the manifest of a file.
  */
 final class EntityRef
 {
@@ -15,9 +16,10 @@ final class EntityRef
     public const CONTENT = 'content';
     public const MENU = 'menu';
     public const REDIRECTS = 'redirects';
+    public const FILE = 'file';
 
     /**
-     * @param self::SITE|self::LAYOUT|self::PAGE|self::CONTENT|self::MENU|self::REDIRECTS $type
+     * @param self::SITE|self::LAYOUT|self::PAGE|self::CONTENT|self::MENU|self::REDIRECTS|self::FILE $type
      */
     private function __construct(
         public readonly string $type,
@@ -53,6 +55,11 @@ final class EntityRef
     public static function redirects(): self
     {
         return new self(self::REDIRECTS, '');
+    }
+
+    public static function file(int $id): self
+    {
+        return new self(self::FILE, (string) $id);
     }
 
     public function key(): string

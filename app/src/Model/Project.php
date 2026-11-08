@@ -26,11 +26,15 @@ final class Project
 
     public readonly Redirects $redirects;
 
+    /** @var array<int, File> */
+    public readonly array $files;
+
     /**
      * @param list<Layout>  $layouts
      * @param list<Page>    $pages
      * @param list<Content> $contents
      * @param list<Menu>    $menus
+     * @param list<File>    $files
      */
     public function __construct(
         public readonly Site $site,
@@ -39,8 +43,18 @@ final class Project
         array $contents = [],
         array $menus = [],
         ?Redirects $redirects = null,
+        array $files = [],
     ) {
         $this->redirects = $redirects ?? Redirects::none();
+
+        $filesById = [];
+
+        foreach ($files as $file) {
+            $filesById[$file->id] = $file;
+        }
+
+        ksort($filesById);
+        $this->files = $filesById;
         $this->layouts = self::index($layouts, static fn (Layout $layout): string => $layout->name);
         $this->contents = self::index($contents, static fn (Content $content): string => $content->name);
         $this->menus = self::index($menus, static fn (Menu $menu): string => $menu->name);
@@ -73,6 +87,27 @@ final class Project
     public function menu(string $name): ?Menu
     {
         return $this->menus[$name] ?? null;
+    }
+
+    public function file(int $id): ?File
+    {
+        return $this->files[$id] ?? null;
+    }
+
+    public function withFile(File $file): self
+    {
+        $files = $this->files;
+        $files[$file->id] = $file;
+
+        return $this->rebuild(files: $files);
+    }
+
+    public function withoutFile(int $id): self
+    {
+        $files = $this->files;
+        unset($files[$id]);
+
+        return $this->rebuild(files: $files);
     }
 
     public function withSite(Site $site): self
@@ -172,6 +207,7 @@ final class Project
      * @param array<int, Page>|null       $pages
      * @param array<string, Content>|null $contents
      * @param array<string, Menu>|null    $menus
+     * @param array<int, File>|null       $files
      */
     private function rebuild(
         ?Site $site = null,
@@ -180,6 +216,7 @@ final class Project
         ?array $contents = null,
         ?array $menus = null,
         ?Redirects $redirects = null,
+        ?array $files = null,
     ): self {
         return new self(
             $site ?? $this->site,
@@ -188,6 +225,7 @@ final class Project
             array_values($contents ?? $this->contents),
             array_values($menus ?? $this->menus),
             $redirects ?? $this->redirects,
+            array_values($files ?? $this->files),
         );
     }
 

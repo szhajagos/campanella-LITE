@@ -13,6 +13,7 @@ final class Request
      * @param array<string, string> $form    form fields (application/x-www-form-urlencoded)
      * @param array<string, string> $headers lowercase names
      * @param array<string, string> $query
+     * @param list<UploadedFile>    $files   the files of the "files[]" form field
      */
     public function __construct(
         public readonly string $method,
@@ -23,6 +24,7 @@ final class Request
         public readonly string $clientAddress = '',
         public readonly bool $secure = false,
         public readonly array $query = [],
+        public readonly array $files = [],
     ) {
     }
 
@@ -36,8 +38,10 @@ final class Request
             }
         }
 
-        if (isset($_SERVER['CONTENT_TYPE']) && is_string($_SERVER['CONTENT_TYPE'])) {
-            $headers['content-type'] = $_SERVER['CONTENT_TYPE'];
+        foreach (['CONTENT_TYPE' => 'content-type', 'CONTENT_LENGTH' => 'content-length'] as $variable => $header) {
+            if (isset($_SERVER[$variable]) && is_string($_SERVER[$variable])) {
+                $headers[$header] = $_SERVER[$variable];
+            }
         }
 
         $method = is_string($_SERVER['REQUEST_METHOD'] ?? null) ? $_SERVER['REQUEST_METHOD'] : 'GET';
@@ -53,6 +57,7 @@ final class Request
             clientAddress: is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '',
             secure: is_string($https) && $https !== '' && strtolower($https) !== 'off',
             query: self::strings($_GET),
+            files: UploadedFile::fromGlobals($_FILES, 'files'),
         );
     }
 

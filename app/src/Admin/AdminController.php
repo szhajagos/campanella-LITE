@@ -7,9 +7,12 @@ namespace Campanella\Lite\Admin;
 use Campanella\Lite\Admin\Session\Session;
 use Campanella\Lite\Application;
 use Campanella\Lite\Command\Format\TextFormatter;
+use Campanella\Lite\Command\Handler\ListFilesCommand;
 use Campanella\Lite\Command\Output;
 use Campanella\Lite\Command\Result\BatchResult;
 use Campanella\Lite\Exception\InvalidDataException;
+use Campanella\Lite\Files\FileRejected;
+use Campanella\Lite\Files\FileTypes;
 use Campanella\Lite\Http\Request;
 use Campanella\Lite\Http\Response;
 use Campanella\Lite\I18n\Message;
@@ -34,6 +37,7 @@ use Twig\TwigFunction;
  *     POST /admin/logout             log out (form, CSRF token)
  *     POST /admin/run                run a command batch (JSON, X-CSRF-Token header)
  *     GET  /admin/preview/{id}[/{language}]  show any page, drafts included
+ *     POST /admin/upload            add files to the file repository (multipart "files[]")
  *
  * While there is no admin user, /admin shows the first-time setup instead
  * (POST /admin/setup), protected by the setup key in config/setup-key.txt.
@@ -104,6 +108,7 @@ final class AdminController
             $path === '/admin/login' && $request->method === 'POST' => $this->login($request),
             $path === '/admin/logout' && $request->method === 'POST' => $this->logout($request),
             $path === '/admin/run' && $request->method === 'POST' => $this->run($request),
+            $path === '/admin/upload' && $request->method === 'POST' => $this->upload($request),
             str_starts_with($path, '/admin/preview/') && in_array($request->method, ['GET', 'HEAD'], true) => $this->preview($path),
             default => Response::text("Not found.\n", 404),
         };
@@ -218,6 +223,85 @@ final class AdminController
             'history_html' => $this->twig->render('history.html.twig', $panels),
             'site_name' => $panels['site_name'],
         ]);
+    }
+
+    /**
+     * Adds the uploaded files to the file repository. Uploading changes
+     * nothing on the website; the response gives each file's id, to be
+     * used by commands afterwards.
+     */
+    private function upload(Request $request): Response
+    {
+        $user = $this->currentUser();
+
+        if ($user === null) {
+            return Response::json(['error' => 'not_logged_in'], 401);
+        }
+
+        if (!$this->validCsrf($request)) {
+            return Response::json(['error' => 'invalid_csrf_token'], 403);
+        }
+
+        $repository = $this->app->fileRepository();
+        $results = [];
+
+        if ($request->files === []) {
+            $tooLarge = (int) ($request->header('content-length') ?? 0) > 0;
+            $results[] = ['ok' => false, 'filename' => '', 'message' => $tooLarge
+                ? $this->translateMessage(new Message('upload.server_limit', ['limit' => (string) ini_get('post_max_size')]))
+                : $this->translateMessage(new Message('upload.nothing'))];
+        }
+
+        foreach ($request->files as $upload) {
+            $name = mb_substr(mb_scrub($upload->name, 'UTF-8'), 0, 200);
+
+            try {
+                if ($upload->error !== UPLOAD_ERR_OK) {
+                    throw new FileRejected(...self::uploadError($upload->error));
+                }
+
+                $file = $repository->add($upload->temporary, $upload->name, $user->name);
+                $results[] = [
+                    'ok' => true,
+                    'filename' => $file->filename,
+                    'message' => $this->translateMessage(new Message('upload.ok', ['filename' => $file->filename, 'id' => $file->id])),
+                    'id' => $file->id,
+                    'kind' => $file->kind(),
+                    'size' => ListFilesCommand::size($file),
+                    'reference' => $file->kind() === FileTypes::IMAGE ? '![](' . $file->reference() . ')' : '[' . $file->filename . '](' . $file->reference() . ')',
+                ];
+            } catch (FileRejected $rejected) {
+                $results[] = ['ok' => false, 'filename' => $name, 'message' => $this->translateMessage(
+                    new Message('upload.failed', ['filename' => $name, 'reason' => $this->translateMessage($rejected->reason)]),
+                )];
+            }
+        }
+
+        $panels = $this->panels($user->name);
+        $ok = array_filter($results, static fn (array $result): bool => $result['ok']) !== [];
+
+        return Response::json([
+            'ok' => $ok,
+            'files' => array_values(array_map(
+                static fn (array $result): array => ['id' => $result['id'], 'filename' => $result['filename'], 'reference' => $result['reference']],
+                array_filter($results, static fn (array $result): bool => $result['ok']),
+            )),
+            'html' => $this->twig->render('upload.html.twig', ['results' => $results, 'locale' => $this->locale]),
+            'text' => implode("\n", array_column($results, 'message')),
+            'status_html' => $this->twig->render('status.html.twig', $panels),
+        ]);
+    }
+
+    /**
+     * @return array{0: string, 1: array<string, string|int>}
+     */
+    private static function uploadError(int $error): array
+    {
+        return match ($error) {
+            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => ['upload.server_limit', ['limit' => (string) ini_get('upload_max_filesize')]],
+            UPLOAD_ERR_PARTIAL => ['upload.partial', []],
+            default => ['upload.server_error', ['code' => $error]],
+        };
     }
 
     /**

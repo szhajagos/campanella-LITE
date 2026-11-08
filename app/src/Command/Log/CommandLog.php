@@ -11,8 +11,9 @@ namespace Campanella\Lite\Command\Log;
  *     {"id":"20261108-091500-123456","time":"2026-11-08T09:15:00+01:00","user":"admin",
  *      "action":"applied","files":["pages/3.yaml"],"batch":"page publish 3"}
  *
- * "user" is null for the command line. "action" is "applied" or "undone";
- * an undo entry names the batch it took back in "undoes".
+ * "user" is null for the command line. "action" is "applied" or "undone"
+ * for batches, "uploaded" or "purged" for files added to or removed from
+ * the file repository; an undo entry names the batch it took back in "undoes".
  *
  * When the file grows past 2 MB it is renamed to commands.log.1 (replacing
  * the previous one) and a new file is started.

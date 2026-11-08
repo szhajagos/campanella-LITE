@@ -7,6 +7,7 @@ namespace Campanella\Lite\Project;
 use Campanella\Lite\Exception\InvalidDataException;
 use Campanella\Lite\Model\Content;
 use Campanella\Lite\Model\ContentTranslation;
+use Campanella\Lite\Model\File;
 use Campanella\Lite\Model\Layout;
 use Campanella\Lite\Model\Menu;
 use Campanella\Lite\Model\Page;
@@ -26,6 +27,7 @@ use Campanella\Lite\Storage\YamlCodec;
  *     content/{name}/{language}.md
  *     menus/{name}.yaml
  *     redirects.yaml                (optional)
+ *     files/manifest/{id}.yaml      (the files themselves are in files/store/)
  *
  * The repository checks structure (file names, field types). It does not
  * check references between entities; that is the validator's job, and it
@@ -39,6 +41,7 @@ final class ProjectRepository
     public const CONTENT_DIR = 'content';
     public const MENU_DIR = 'menus';
     public const REDIRECTS_FILE = 'redirects.yaml';
+    public const FILE_MANIFEST_DIR = 'files/manifest';
 
     public function __construct(private readonly FileStore $store)
     {
@@ -59,6 +62,7 @@ final class ProjectRepository
             $this->loadContents(),
             $this->loadMenus(),
             $this->loadRedirects(),
+            $this->loadFiles(),
         );
     }
 
@@ -132,6 +136,16 @@ final class ProjectRepository
         return $this->store->delete(self::MENU_DIR . '/' . $name . '.yaml');
     }
 
+    public function saveFile(File $file): void
+    {
+        $this->writeYaml(self::FILE_MANIFEST_DIR . '/' . $file->id . '.yaml', $file->toArray());
+    }
+
+    public function deleteFile(int $id): bool
+    {
+        return $this->store->delete(self::FILE_MANIFEST_DIR . '/' . $id . '.yaml');
+    }
+
     /**
      * Writes redirects.yaml, or removes it when there are no redirects.
      */
@@ -162,6 +176,7 @@ final class ProjectRepository
                 EntityRef::CONTENT => ($content = $project->content($ref->id)) !== null ? $this->saveContent($content) : $this->deleteContent($ref->id),
                 EntityRef::MENU => ($menu = $project->menu($ref->id)) !== null ? $this->saveMenu($menu) : $this->deleteMenu($ref->id),
                 EntityRef::REDIRECTS => $this->saveRedirects($project->redirects),
+                EntityRef::FILE => ($file = $project->file((int) $ref->id)) !== null ? $this->saveFile($file) : $this->deleteFile((int) $ref->id),
             };
         }
     }
@@ -178,6 +193,7 @@ final class ProjectRepository
             EntityRef::CONTENT => self::CONTENT_DIR . '/' . $ref->id . '/',
             EntityRef::MENU => self::MENU_DIR . '/' . $ref->id . '.yaml',
             EntityRef::REDIRECTS => self::REDIRECTS_FILE,
+            EntityRef::FILE => self::FILE_MANIFEST_DIR . '/' . $ref->id . '.yaml',
         };
     }
 
@@ -262,6 +278,28 @@ final class ProjectRepository
         }
 
         return $menus;
+    }
+
+    /**
+     * @return list<File>
+     */
+    private function loadFiles(): array
+    {
+        $files = [];
+
+        foreach ($this->store->listFiles(self::FILE_MANIFEST_DIR, 'yaml') as $name) {
+            $source = self::FILE_MANIFEST_DIR . '/' . $name . '.yaml';
+
+            if (preg_match('/^[1-9][0-9]*$/', $name) !== 1) {
+                throw new InvalidDataException($source, 'manifest files must be named after the file id, e.g. "12.yaml"');
+            }
+
+            $file = File::fromArray($this->readYaml($source), $source);
+            $this->assertMatchesFileName((string) $file->id, $name, $source, 'id');
+            $files[] = $file;
+        }
+
+        return $files;
     }
 
     private function loadRedirects(): Redirects

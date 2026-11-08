@@ -17,14 +17,14 @@ use Campanella\Lite\Routing\Urls;
 
 final class ListCommand implements CommandHandler
 {
-    public const TYPES = ['pages', 'layouts', 'content', 'menus', 'languages', 'redirects'];
+    public const TYPES = ['pages', 'layouts', 'content', 'menus', 'languages', 'redirects', 'files'];
 
     public function signature(): Signature
     {
         return new Signature(
             name: 'list',
             arguments: ['type'],
-            examples: ['list pages', 'list layouts', 'list content', 'list menus', 'list languages', 'list redirects'],
+            examples: ['list pages', 'list layouts', 'list content', 'list menus', 'list languages', 'list redirects', 'list files'],
             readOnly: true,
         );
     }

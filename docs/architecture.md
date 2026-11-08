@@ -39,6 +39,7 @@ The rule that holds the design together: **the command interpreter is the only c
 | Command log, `log` | `Campanella\Lite\Command\Log` | M6 | Done |
 | Undo snapshots, `undo` | `Campanella\Lite\Project\UndoHistory` | M6 | Done |
 | Installer, starters, web setup | `Campanella\Lite\Install` | M6 | Done |
+| File repository, uploads, `file` commands | `Campanella\Lite\Files` | M7 | Done |
 
 ## Layers built in M1
 
@@ -113,6 +114,12 @@ Commands that touch files outside the project (`build`, `cache clear`) return de
 ### Installer (`Campanella\Lite\Install`)
 
 `Installer` creates `config/`, `var/` and `project/` (each with a `Require all denied` `.htaccess`), copies a starter from `app/starter/{language}/` and names the website, creates the first admin user, and manages the setup key. It is the only code besides the interpreter that writes to `project/`, and only into an empty one. `AdminController` shows the setup form while there is no admin user; the CLI offers `--init`.
+
+### Files (`Campanella\Lite\Files`, M7)
+
+- **`FileRepository::add()`** is the single way into the file repository, used by the admin upload, the CLI and later the AI module. Under the write lock it stores the file with a random name, writes its manifest and hands out the next id. This is the one write to `project/` outside the interpreter; it only adds a file nothing refers to yet, so it cannot change the website.
+- **`FileInspector`** detects the type from the file's signature and refuses anything not on the list of `FileTypes` or carrying active content.
+- Manifests are entities like pages (`EntityRef::file`, `Workspace::putFile`), so the `file` commands, validation, the log and undo work as for everything else. `file purge` deletes manifests and stored files after the batch, like `build`.
 
 ### I18n (`Campanella\Lite\I18n`)
 

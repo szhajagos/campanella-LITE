@@ -39,6 +39,7 @@ The most important rule of Campanella Lite: **the command language changes data,
 | YAML | Only plain data is accepted: PHP objects, constants and custom tags are refused. |
 | All-or-nothing batches | A batch is validated as a whole before anything is written. |
 | Command log | Every change is logged in `var/log/commands.log` with time, user, files and the batch itself. |
+| Uploads | Only logged-in admins with the CSRF token can upload. The type is detected from the content, never from the name or the browser's claim; only types that cannot carry scripts or macros are accepted, PDFs with active content and Office files with macros are refused, images are decoded once. Files get random stored names and are kept inside `project/`, outside the web root; the shown name never becomes a path. See [files.md](files.md). |
 | Undo | The last 50 changes can be taken back; `undo` never overwrites a file changed afterwards without `--force`. |
 | Directories | The installer puts a `Require all denied` `.htaccess` into `config/`, `project/` and `var/`; a root `.htaccess` keeps everything outside `public/` unreachable where the document root cannot be `public/`. |
 

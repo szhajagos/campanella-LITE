@@ -7,6 +7,7 @@ namespace Campanella\Lite\Command;
 use Campanella\Lite\Exception\InvalidDataException;
 use Campanella\Lite\Model\Content;
 use Campanella\Lite\Model\ContentTranslation;
+use Campanella\Lite\Model\File;
 use Campanella\Lite\Model\Layout;
 use Campanella\Lite\Model\Menu;
 use Campanella\Lite\Model\MenuItem;
@@ -22,6 +23,7 @@ use Campanella\Lite\Model\Site;
  *     layout.default.title    layout.default.body.container    layout.default.body.main.width
  *     content.intro.en.title
  *     menu.main.items.2.label menu.main.items.2.children.1.url
+ *     file.12.filename        file.12.description.hu
  *
  * A language-dependent field without a language code means the default
  * language. List positions (menu items) count from 1.
@@ -31,7 +33,7 @@ use Campanella\Lite\Model\Site;
  */
 final class ProjectPaths
 {
-    public const ROOTS = ['site', 'page', 'layout', 'content', 'menu'];
+    public const ROOTS = ['site', 'page', 'layout', 'content', 'menu', 'file'];
 
     private const LOCALIZED = ['title', 'description', 'alias', 'label'];
 
@@ -46,6 +48,7 @@ final class ProjectPaths
             'layout' => [self::layoutView($this->layout($project, $segments, $path)), array_slice($segments, 2)],
             'content' => [$this->content($project, $segments, $path)->toArray(), array_slice($segments, 2)],
             'menu' => [self::menuView($this->menu($project, $segments, $path)), array_slice($segments, 2)],
+            'file' => [self::fileView($this->file($project, $segments, $path)), array_slice($segments, 2)],
             default => throw $this->unknownRoot($root),
         };
 
@@ -81,6 +84,7 @@ final class ProjectPaths
                 'layout' => $this->setLayout($workspace, $this->layout($project, $segments, $path), array_slice($segments, 2), $value, $path),
                 'content' => $this->setContent($workspace, $this->content($project, $segments, $path), array_slice($segments, 2), $value, $path),
                 'menu' => $this->setMenu($workspace, $this->menu($project, $segments, $path), array_slice($segments, 2), $value, $path),
+                'file' => $this->setFile($workspace, $this->file($project, $segments, $path), array_slice($segments, 2), $value, $path),
                 default => throw $this->unknownRoot($segments[0]),
             };
         } catch (InvalidDataException $exception) {
@@ -122,6 +126,20 @@ final class ProjectPaths
         }
 
         return $view;
+    }
+
+    /**
+     * The manifest of a file with every field present, optional ones empty.
+     *
+     * @return array<string, mixed>
+     */
+    public static function fileView(File $file): array
+    {
+        return array_replace(
+            ['id' => null, 'filename' => null, 'stored_filename' => null, 'mime_type' => null, 'extension' => null, 'size' => null,
+                'width' => null, 'height' => null, 'description' => [], 'uploaded_at' => null, 'uploaded_by' => null, 'archived_at' => null],
+            $file->toArray(),
+        );
     }
 
     /**
@@ -342,6 +360,42 @@ final class ProjectPaths
         $items[$index] = $item;
 
         return [$items, $written];
+    }
+
+    /**
+     * @param list<string> $rest
+     */
+    private function setFile(Workspace $workspace, File $file, array $rest, string $value, string $path): string
+    {
+        $data = $file->toArray();
+        $field = $rest[0] ?? '';
+        $base = 'file.' . $file->id . '.' . $field;
+
+        if ($field === 'description' && count($rest) <= 2) {
+            $language = $rest[1] ?? $workspace->defaultLanguage();
+            $data['description'] = $this->setLocalized($data['description'] ?? [], $language, $value);
+            $written = $base . '.' . $language;
+        } elseif ($field === 'filename' && count($rest) === 1) {
+            $data['filename'] = $value;
+            $written = $base;
+        } else {
+            throw $this->notSettable($path);
+        }
+
+        $workspace->putFile(File::fromArray($data, $path));
+
+        return $written;
+    }
+
+    /**
+     * @param list<string> $segments
+     */
+    private function file(Project $project, array $segments, string $path): File
+    {
+        $reference = $segments[1] ?? throw CommandFailed::because('path.incomplete', ['path' => $path]);
+        $id = preg_match('/^[1-9][0-9]{0,9}$/', $reference) === 1 ? (int) $reference : 0;
+
+        return $project->file($id) ?? throw CommandFailed::because('file.not_found', ['file' => $reference]);
     }
 
     /**

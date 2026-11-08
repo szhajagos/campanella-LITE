@@ -42,12 +42,19 @@ use Campanella\Lite\Command\Handler\Page\PagePlacementCommand;
 use Campanella\Lite\Command\Handler\Page\PageStatusCommand;
 use Campanella\Lite\Command\Handler\RedirectRemoveCommand;
 use Campanella\Lite\Command\Handler\SetCommand;
+use Campanella\Lite\Command\Handler\File\FileDeleteCommand;
+use Campanella\Lite\Command\Handler\File\FileDescribeCommand;
+use Campanella\Lite\Command\Handler\File\FilePurgeCommand;
+use Campanella\Lite\Command\Handler\File\FileRenameCommand;
+use Campanella\Lite\Command\Handler\File\FileRestoreCommand;
+use Campanella\Lite\Command\Handler\ListFilesCommand;
 use Campanella\Lite\Command\Handler\LogCommand;
 use Campanella\Lite\Command\Handler\UndoCommand;
 use Campanella\Lite\Command\Handler\UserLocaleCommand;
 use Campanella\Lite\Command\Interpreter;
 use Campanella\Lite\Command\Log\CommandLog;
 use Campanella\Lite\Http\FrontController;
+use Campanella\Lite\Files\FileRepository;
 use Campanella\Lite\I18n\Translator;
 use Campanella\Lite\Install\Installer;
 use Campanella\Lite\Project\EntityRef;
@@ -151,6 +158,12 @@ final class Application
         return new UserRepository(new FileStore($this->paths->config()));
     }
 
+    /** Where uploaded files are kept; every way of adding a file goes through it. */
+    public function fileRepository(): FileRepository
+    {
+        return new FileRepository(new FileStore($this->paths->project()), $this->lock(), $this->commandLog());
+    }
+
     public function repository(): ProjectRepository
     {
         return new ProjectRepository(new FileStore($this->paths->project()));
@@ -189,6 +202,12 @@ final class Application
                 new RedirectRemoveCommand(),
                 new UndoCommand(),
                 new LogCommand($this->commandLog()),
+                new ListFilesCommand(),
+                new FileDescribeCommand(),
+                new FileRenameCommand(),
+                new FileDeleteCommand(),
+                new FileRestoreCommand(),
+                new FilePurgeCommand($this->fileRepository()),
                 new UserLocaleCommand($this->users(), $this->translator()),
                 new PageCreateCommand(),
                 new PageDeleteCommand(),

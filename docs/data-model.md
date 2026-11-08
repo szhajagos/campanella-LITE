@@ -140,6 +140,10 @@ items:
 
 Each item has a `label` (localized, required in the default language) and exactly one target: `page` (a page id) or `url` (an `http(s)://` URL, a `mailto:` link or a site-relative path starting with `/`). Items can have `children`.
 
+### File (`files/manifest/{id}.yaml`)
+
+The manifest of a file in the file repository; the file itself is stored under `files/store/` with a random name. Files are added by uploading, not by commands. See [files.md](files.md) for the fields, the accepted types and the commands.
+
 ## Validation
 
 `ProjectValidator` checks the whole project and returns every violation it finds. A violation has a stable **code**, a **path** in the dotted notation of the command language, and **parameters** for the message:
@@ -188,6 +192,10 @@ An alias:
 | `page.unknown_content` | A placement refers to missing content | `content` |
 | `content.no_translations` | Content has no language file | |
 | `content.missing_title` | A translation has no title | |
+| `content.unknown_file` | The text refers to a file id that does not exist (`file:42`) | `file` |
+| `file.unknown_type` | The manifest has an extension that is not accepted | `extension` |
+| `file.invalid_filename` | The file name is empty, too long, contains `/`, `\` or control characters, or does not end with the extension | `filename`, `extension`, `max` |
+| `file.invalid_stored_name` | The stored name is not a random name inside `files/store/` | |
 | `menu.invalid_target` | An item has neither or both of `page` and `url` | |
 | `menu.unknown_page` | An item points to a missing page | `page` |
 | `menu.invalid_url` | An item's URL is not allowed | `url` |

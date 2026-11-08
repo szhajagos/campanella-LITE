@@ -85,6 +85,36 @@ final class FileStore
         }
     }
 
+    /**
+     * Copies a file from outside the store into it, atomically like write(),
+     * without reading it into memory (for large uploads).
+     */
+    public function import(string $relative, string $source): void
+    {
+        $path = $this->path($relative);
+
+        if ($path === $this->baseDir) {
+            throw StorageException::unsafePath($relative, 'a file name is required');
+        }
+
+        $directory = dirname($path);
+        $this->ensureDirectory($directory);
+
+        $temporary = sprintf('%s/.%s.%s.tmp', $directory, basename($path), bin2hex(random_bytes(6)));
+
+        if (!@copy($source, $temporary)) {
+            @unlink($temporary);
+
+            throw StorageException::operationFailed('write', $relative);
+        }
+
+        if (!@rename($temporary, $path)) {
+            @unlink($temporary);
+
+            throw StorageException::operationFailed('replace', $relative);
+        }
+    }
+
     /** Deletes a file. Returns false if there was nothing to delete. */
     public function delete(string $relative): bool
     {

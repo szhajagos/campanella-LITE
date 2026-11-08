@@ -10,9 +10,23 @@ Added, Changed, Deprecated, Removed, Fixed, Security.
 
 ## [Unreleased]
 
+### Added
+
+- File repository for images, documents, audio and video: every file gets a permanent numeric id and a manifest (`project/files/manifest/{id}.yaml`); the file itself is stored under a random name.
+- Upload in the admin dashboard: drop files on the command box or use *Attach files*; *Run* uploads them and shows each file's id and a reference to use in content.
+- `bin/campanella --upload=<path>` adds files on the command line.
+- Commands `list files` (with `--type`, `--name`, `--by`, `--since`, `--search`, `--archived`), `file describe`, `file rename`, `file delete` (archives), `file restore`, `file purge`; `get` and `set` for `file.{id}` paths.
+- Content can refer to files as `![](file:12)` and `[text](file:13)`; `check` reports references to files that do not exist.
+- Uploads and purges are written to the command log.
+- Developer documentation: `docs/files.md`.
+
 ### Changed
 
 - The admin command box is emptied after a batch has run, so a second click on Run cannot repeat it. After a dry run or an error the text stays; Alt+↑ brings back an emptied batch.
+
+### Security
+
+- Uploaded files are recognised by their content; only types that cannot carry scripts or macros are accepted. PDFs with JavaScript, launch actions, embedded files or XFA forms and Office documents with macros or ActiveX controls are refused; images are decoded once and limited to 10000 px per side.
 
 ### Removed
 

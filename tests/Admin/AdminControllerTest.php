@@ -10,6 +10,8 @@ use Campanella\Lite\Admin\Session\ArraySession;
 use Campanella\Lite\Admin\User;
 use Campanella\Lite\Http\Request;
 use Campanella\Lite\Http\Response;
+use Campanella\Lite\Http\UploadedFile;
+use Campanella\Lite\Tests\Support\SampleFiles;
 use Campanella\Lite\Tests\Command\CommandTestCase;
 
 final class AdminControllerTest extends CommandTestCase
@@ -230,6 +232,70 @@ final class AdminControllerTest extends CommandTestCase
         self::assertSame(404, $this->get('/admin/secret')->status);
         self::assertSame(404, $this->controller()->handle(new Request('GET', '/admin/login'))->status);
         self::assertSame(200, $this->get('/admin/index.php')->status);
+    }
+
+    public function testUploadsFilesAndReportsTheirIds(): void
+    {
+        $this->login();
+        $samples = new SampleFiles($this->temporaryDirectory() . '/uploads');
+
+        $response = $this->uploadFiles([
+            new UploadedFile('Előadóterem.PNG', $samples->image('png', 30, 20)),
+            new UploadedFile('page.html', $samples->bytes('page.html', '<html></html>')),
+            new UploadedFile('huge.mp4', '', UPLOAD_ERR_INI_SIZE),
+        ]);
+        $data = $this->json($response);
+
+        self::assertSame(200, $response->status);
+        self::assertTrue($data['ok']);
+        self::assertSame([['id' => 1, 'filename' => 'Előadóterem.png', 'reference' => '![](file:1)']], $data['files']);
+        self::assertIsString($data['html']);
+        self::assertStringContainsString('![](file:1)', $data['html']);
+        self::assertStringContainsString('30×20', $data['html']);
+        self::assertStringContainsString('page.html: This type of file cannot be uploaded', $data['html']);
+        self::assertStringContainsString('larger than the server allows', $data['html']);
+        self::assertSame('admin', $this->application->repository()->load()->file(1)?->uploadedBy);
+    }
+
+    public function testUploadsNeedALoginAndTheCsrfToken(): void
+    {
+        $samples = new SampleFiles($this->temporaryDirectory() . '/uploads');
+        $file = new UploadedFile('a.png', $samples->image());
+
+        self::assertSame(401, $this->uploadFiles([$file])->status);
+
+        $this->login();
+        $forged = $this->controller()->handle(new Request('POST', '/admin/upload', headers: ['x-csrf-token' => 'forged'], files: [$file]));
+        self::assertSame(403, $forged->status);
+        self::assertSame([], $this->application->repository()->load()->files);
+    }
+
+    public function testAnUploadThatDidNotArrive(): void
+    {
+        $this->login();
+
+        $empty = $this->json($this->uploadFiles([]));
+        self::assertFalse($empty['ok']);
+        self::assertStringContainsString('No file arrived', (string) $empty['text']);
+
+        $tooLarge = $this->json($this->controller()->handle(new Request('POST', '/admin/upload', headers: [
+            'x-csrf-token' => (string) $this->session->get('csrf'),
+            'content-length' => '999999999',
+        ])));
+        self::assertStringContainsString('larger than the server allows', (string) $tooLarge['text']);
+    }
+
+    /**
+     * @param list<UploadedFile> $files
+     */
+    private function uploadFiles(array $files): Response
+    {
+        return $this->controller()->handle(new Request(
+            'POST',
+            '/admin/upload',
+            headers: ['x-csrf-token' => (string) $this->session->get('csrf')],
+            files: $files,
+        ));
     }
 
     private function controller(): AdminController

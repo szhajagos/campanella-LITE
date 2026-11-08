@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Campanella\Lite\Command;
 
 use Campanella\Lite\Model\Content;
+use Campanella\Lite\Model\File;
 use Campanella\Lite\Model\Layout;
 use Campanella\Lite\Model\Menu;
 use Campanella\Lite\Model\Page;
@@ -110,6 +111,12 @@ final class Workspace
         $this->touch(EntityRef::redirects());
     }
 
+    public function putFile(File $file): void
+    {
+        $this->project = $this->project->withFile($file);
+        $this->touch(EntityRef::file($file->id));
+    }
+
     /**
      * The touched entities that really differ from the original, in the order they were first touched.
      *
@@ -140,6 +147,7 @@ final class Workspace
             EntityRef::CONTENT => $project->content($ref->id)?->toArray(),
             EntityRef::MENU => $project->menu($ref->id)?->toArray(),
             EntityRef::REDIRECTS => $project->redirects->toArray(),
+            EntityRef::FILE => $project->file((int) $ref->id)?->toArray(),
         };
     }
 }

@@ -69,6 +69,7 @@ name      = lower { lower | digit | "-" } ;
 | `layout.default.body.main.width` | A column's width, content or menu |
 | `content.intro.en.title` | The title of one language version of a content item |
 | `menu.main.items.2.label` | A menu item, counted from 1; nested items: `items.2.children.1.url` |
+| `file.12`, `file.12.description.hu`, `file.12.filename` | A file's manifest; the description and the file name can be set |
 
 Region names `name` and `title`, and the column name `container`, are reserved so that these paths stay unambiguous.
 
@@ -278,6 +279,19 @@ language default hu
 
 `build` and `cache clear` run after the batch has been written, so they see its changes; they do nothing on a dry run or in a rejected batch. Every batch that changes the website clears the generated pages by itself. Changing or removing an alias records a redirect from the old address automatically. See [generator.md](generator.md).
 
+## Files
+
+| Command | Description |
+| --- | --- |
+| `list files [--type=…] [--name=…] [--by=…] [--since=…] [--search=…] [--archived]` | Lists the files of the repository; every option narrows the list. |
+| `file describe <id> [--lang=<code>] <description>` | Sets the description (for images also the alt text); `""` removes it. |
+| `file rename <id> <filename>` | Changes the file name people see; the extension stays. |
+| `file delete <id> [--force]` | Archives a file; content that uses it blocks this unless `--force`. |
+| `file restore <id>` | Brings back an archived file. |
+| `file purge [<id>]` | Removes archived files for good, after the batch. Cannot be undone. |
+
+Files are added by uploading (the dashboard or `bin/campanella --upload=<path>`), not by a command; the response gives the new file's id. Content refers to files as `![](file:12)` or `[Price list](file:13)`. See [files.md](files.md).
+
 ## History
 
 | Command | Description |
@@ -314,6 +328,7 @@ Responses use these key families; the full list with texts is in `app/translatio
 | `help.*` | Command descriptions |
 | `undo.*`, `log.*` | Undo and the command log |
 | `install.*` | Installer errors (web setup and `--init`) |
+| `file.*`, `upload.*` | Files and uploads |
 
 ## Developer CLI
 
@@ -332,3 +347,5 @@ It also sets up a new installation (see [installation.md](installation.md)):
 bin/campanella --init --starter=hu --site-name="Saját oldal" --add-user=admin
 bin/campanella --version
 ```
+
+`--upload=<path>` (repeatable) adds files to the file repository and prints their ids; with `--json` as a list of objects.

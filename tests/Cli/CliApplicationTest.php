@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Campanella\Lite\Tests\Cli;
 
+use Campanella\Lite\Application;
 use Campanella\Lite\Cli\CliApplication;
+use Campanella\Lite\Paths;
+use Campanella\Lite\Tests\Support\SampleFiles;
 use Campanella\Lite\Tests\Support\TemporaryDirectory;
 use PHPUnit\Framework\TestCase;
 
@@ -132,12 +135,29 @@ final class CliApplicationTest extends TestCase
         self::assertDirectoryDoesNotExist($this->root . '/project');
     }
 
+    public function testUploadsFiles(): void
+    {
+        $samples = new SampleFiles($this->temporaryDirectory() . '/uploads');
+        $image = $samples->image('jpg', 10, 10, 'photo.jpeg');
+
+        [$code, $out] = $this->cli(['--upload=' . $image, '--upload=' . $samples->bytes('x.svg', '<svg/>')]);
+
+        self::assertSame(CliApplication::EXIT_REJECTED, $code);
+        self::assertStringContainsString('photo.jpg: uploaded as file 1.', $out);
+        self::assertStringContainsString('This type of file cannot be uploaded', $out);
+        self::assertSame('cli', (new Application(new Paths($this->root)))->repository()->load()->file(1)?->uploadedBy);
+
+        [$code, $out] = $this->cli(['--upload=' . $image, '--json']);
+        self::assertSame(CliApplication::EXIT_OK, $code);
+        self::assertStringContainsString('"reference": "file:2"', $out);
+    }
+
     public function testShowsTheVersion(): void
     {
         [$code, $out] = $this->cli(['--version']);
 
         self::assertSame(CliApplication::EXIT_OK, $code);
-        self::assertSame('Campanella Lite ' . \Campanella\Lite\Application::VERSION . "\n", $out);
+        self::assertSame('Campanella Lite ' . Application::VERSION . "\n", $out);
     }
 
     public function testInitOptionsNeedInit(): void

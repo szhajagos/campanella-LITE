@@ -106,6 +106,7 @@ Highlights:
 - `@dry-run` as the first line shows what would change without changing anything.
 - Generic `get`, `set` and `list` commands address any value by a dotted path (`page.2.title`, `layout.default.body.main.width`).
 - `check`, `build`, `cache clear`, `undo` (up to 50 batches), `log` and `help` for maintenance.
+- A file repository for images, documents, audio and video: upload in the dashboard, then `list files`, `file describe`, `file rename`, `file delete` and refer to files in content as `![](file:12)`.
 - Every response is also available as JSON, which is the interface the future AI module will use.
 
 ## Data model

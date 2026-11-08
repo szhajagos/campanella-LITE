@@ -162,7 +162,7 @@ final class Interpreter
 
         $before = $this->undo?->capture($changes) ?? [];
         $this->repository->commit($workspace->project(), $changes);
-        [$id, $time] = self::stamp();
+        [$id, $time] = LogEntry::stamp();
         $this->undo?->record($id, $before, $changes, $time, $user, $input);
         $this->log?->append(new LogEntry($id, $time, $user, LogEntry::APPLIED, $files, $input));
 
@@ -265,7 +265,7 @@ final class Interpreter
         }
 
         $this->undo->restore($snapshot);
-        [$id, $time] = self::stamp();
+        [$id, $time] = LogEntry::stamp();
         $this->log?->append(new LogEntry($id, $time, $user, LogEntry::UNDONE, $files, $input, $snapshot->id));
 
         if ($this->onCommit !== null) {
@@ -280,18 +280,6 @@ final class Interpreter
             [],
             $files,
         );
-    }
-
-    /**
-     * A new batch id, sortable by time, and the time itself.
-     *
-     * @return array{0: string, 1: string}
-     */
-    private static function stamp(): array
-    {
-        $now = new \DateTimeImmutable();
-
-        return [$now->format('Ymd-His-u'), $now->format('c')];
     }
 
     /**

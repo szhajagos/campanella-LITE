@@ -30,8 +30,14 @@
                 </div>
                 <div class="card-body d-flex flex-column">
                     <textarea id="commands" class="form-control commands flex-grow-1" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="help"></textarea>
+                    <div id="attachments" class="attachments mt-2" hidden>
+                        <span class="small text-body-secondary">{{ t('upload.attached') }}</span>
+                        <ul class="list-inline d-inline mb-0" data-remove-label="{{ t('upload.remove') }}"></ul>
+                    </div>
                     <div class="d-flex align-items-center gap-3 mt-3">
                         <button id="run" class="btn btn-primary" type="button">{{ t('dashboard.run') }}</button>
+                        <button id="attach" class="btn btn-outline-secondary" type="button">{{ t('upload.attach') }}</button>
+                        <input id="file-input" type="file" multiple hidden>
                         <div class="form-check mb-0">
                             <input class="form-check-input" type="checkbox" id="dry-run">
                             <label class="form-check-label" for="dry-run">{{ t('dashboard.dry_run') }}</label>

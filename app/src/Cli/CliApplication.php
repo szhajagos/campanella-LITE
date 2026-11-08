@@ -7,6 +7,8 @@ namespace Campanella\Lite\Cli;
 use Campanella\Lite\Admin\User;
 use Campanella\Lite\Application;
 use Campanella\Lite\Command\Result\Outcome;
+use Campanella\Lite\Files\FileRejected;
+use Campanella\Lite\I18n\Message;
 use Campanella\Lite\Install\InstallError;
 use Campanella\Lite\Install\Installer;
 use Campanella\Lite\Paths;
@@ -46,6 +48,8 @@ final class CliApplication
               --add-user=<name>     Create an admin user, or set a new password for an
                                     existing one. The password is read from standard
                                     input (at least 10 characters).
+              --upload=<path>       Add a file to the file repository (repeatable); prints
+                                    its id, to be used by commands afterwards
               --init                Set up a new installation: create config/, var/ and
                                     project/, and copy a starter website into project/
               --starter=<language>  Starter website for --init: en or hu (default: en)
@@ -104,6 +108,10 @@ final class CliApplication
             }
         }
 
+        if ($arguments['upload'] !== []) {
+            return $this->upload($arguments);
+        }
+
         if ($arguments['add-user'] !== null) {
             return $this->addUser($arguments['root'], $arguments['add-user'], $arguments['locale']);
         }
@@ -141,7 +149,7 @@ final class CliApplication
     /**
      * @param list<string> $args
      *
-     * @return array{root: string, execute: ?string, file: ?string, dry-run: bool, json: bool, locale: string, help: bool, version: bool, add-user: ?string, init: bool, starter: ?string, site-name: ?string, base-url: string}
+     * @return array{root: string, execute: ?string, file: ?string, dry-run: bool, json: bool, locale: string, help: bool, version: bool, upload: list<string>, add-user: ?string, init: bool, starter: ?string, site-name: ?string, base-url: string}
      */
     private function parseArguments(array $args): array
     {
@@ -154,6 +162,7 @@ final class CliApplication
             'locale' => 'en',
             'help' => false,
             'version' => false,
+            'upload' => [],
             'add-user' => null,
             'init' => false,
             'starter' => null,
@@ -184,6 +193,8 @@ final class CliApplication
                 $result['execute'] = $args[++$i] ?? throw new UsageError('-e needs a value.');
             } elseif (str_starts_with($arg, '--execute=')) {
                 $result['execute'] = substr($arg, strlen('--execute='));
+            } elseif (str_starts_with($arg, '--upload=')) {
+                $result['upload'][] = substr($arg, strlen('--upload='));
             } elseif (str_starts_with($arg, '--add-user=')) {
                 $result['add-user'] = substr($arg, strlen('--add-user='));
             } elseif (str_starts_with($arg, '--root=')) {
@@ -211,6 +222,10 @@ final class CliApplication
 
         if (!$result['init'] && ($result['starter'] !== null || $result['site-name'] !== null || $result['base-url'] !== '')) {
             throw new UsageError('--starter, --site-name and --base-url go with --init.');
+        }
+
+        if ($result['upload'] !== [] && ($result['execute'] !== null || $result['file'] !== null || $result['init'] || $result['add-user'] !== null)) {
+            throw new UsageError('--upload goes alone; run commands for the uploaded files afterwards.');
         }
 
         if ($result['init'] && ($result['execute'] !== null || $result['file'] !== null)) {
@@ -287,6 +302,42 @@ final class CliApplication
 
             return self::EXIT_USAGE;
         }
+    }
+
+    /**
+     * Adds files to the repository and prints each one's id (or why it was refused).
+     *
+     * @param array{root: string, locale: string, json: bool, upload: list<string>} $arguments
+     */
+    private function upload(array $arguments): int
+    {
+        $application = new Application(new Paths($arguments['root']));
+        $translator = $application->translator();
+        $repository = $application->fileRepository();
+        $results = [];
+        $failed = false;
+
+        foreach ($arguments['upload'] as $path) {
+            try {
+                if (!is_file($path) || !is_readable($path)) {
+                    throw new FileRejected('upload.nothing');
+                }
+
+                $file = $repository->add($path, basename($path), null);
+                $results[] = ['ok' => true, 'path' => $path, 'id' => $file->id, 'filename' => $file->filename, 'reference' => $file->reference(),
+                    'text' => $translator->translate(new Message('upload.ok', ['filename' => $file->filename, 'id' => $file->id]), $arguments['locale'])];
+            } catch (FileRejected $rejected) {
+                $failed = true;
+                $results[] = ['ok' => false, 'path' => $path, 'error' => $rejected->reason->key,
+                    'text' => $translator->translate(new Message('upload.failed', ['filename' => $path, 'reason' => $translator->translate($rejected->reason, $arguments['locale'])]), $arguments['locale'])];
+            }
+        }
+
+        fwrite($this->stdout, $arguments['json']
+            ? json_encode(['files' => $results], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . "\n"
+            : implode("\n", array_column($results, 'text')) . "\n");
+
+        return $failed ? self::EXIT_REJECTED : self::EXIT_OK;
     }
 
     /**

@@ -54,9 +54,12 @@ final class LogCommand implements CommandHandler
             $entry->id,
             self::shortTime($entry->time),
             $entry->user ?? 'cli',
-            $entry->action === LogEntry::UNDONE
-                ? new Message('log.action_undone', ['id' => $entry->undoes ?? '?'])
-                : new Message('log.action_applied'),
+            match ($entry->action) {
+                LogEntry::UNDONE => new Message('log.action_undone', ['id' => $entry->undoes ?? '?']),
+                LogEntry::UPLOADED => new Message('log.action_uploaded'),
+                LogEntry::PURGED => new Message('log.action_purged'),
+                default => new Message('log.action_applied'),
+            },
             (string) count($entry->files),
             $entry->summary(),
         ], $this->log->recent($count));

@@ -9,6 +9,7 @@ use Campanella\Lite\Command\Invocation;
 use Campanella\Lite\Command\Workspace;
 use Campanella\Lite\Model\Column;
 use Campanella\Lite\Model\Content;
+use Campanella\Lite\Model\File;
 use Campanella\Lite\Model\Layout;
 use Campanella\Lite\Model\Menu;
 use Campanella\Lite\Model\Page;
@@ -42,6 +43,17 @@ final class Lookup
     {
         return $workspace->project()->menu($name)
             ?? throw CommandFailed::because('menu.not_found', ['menu' => $name]);
+    }
+
+    /**
+     * A file by its id; archived files are found too.
+     */
+    public static function file(Workspace $workspace, string $reference): File
+    {
+        $id = preg_match('/^[1-9][0-9]{0,9}$/', $reference) === 1 ? (int) $reference : 0;
+
+        return $workspace->project()->file($id)
+            ?? throw CommandFailed::because('file.not_found', ['file' => $reference]);
     }
 
     public static function region(Layout $layout, string $name): Region

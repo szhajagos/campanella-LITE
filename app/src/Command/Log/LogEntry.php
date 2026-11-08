@@ -11,6 +11,20 @@ final class LogEntry
 {
     public const APPLIED = 'applied';
     public const UNDONE = 'undone';
+    public const UPLOADED = 'uploaded';
+    public const PURGED = 'purged';
+
+    /**
+     * A new entry id, sortable by time, and the time itself.
+     *
+     * @return array{0: string, 1: string}
+     */
+    public static function stamp(): array
+    {
+        $now = new \DateTimeImmutable();
+
+        return [$now->format('Ymd-His-u'), $now->format('c')];
+    }
 
     /**
      * @param list<string> $files project-relative paths

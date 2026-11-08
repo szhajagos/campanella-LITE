@@ -1,0 +1,21 @@
+<div class="response-lines upload-results">
+    <p class="mb-2"><strong>{{ t('upload.title') }}</strong></p>
+{% for result in results %}
+    {% if result.ok %}
+    <div class="response-line line-ok">
+        <span class="line-message">{{ result.message }}</span>
+        <div class="table-responsive"><table class="table table-sm table-bordered response-table mt-1 mb-2">
+            <tbody>
+                <tr><th scope="row">id</th><td>{{ result.id }}</td></tr>
+                <tr><th scope="row">filename</th><td>{{ result.filename }}</td></tr>
+                <tr><th scope="row">type</th><td>{{ result.kind }}</td></tr>
+                <tr><th scope="row">size</th><td>{{ result.size }}</td></tr>
+                <tr><th scope="row">{{ t('upload.reference') }}</th><td><code class="upload-reference">{{ result.reference }}</code></td></tr>
+            </tbody>
+        </table></div>
+    </div>
+    {% else %}
+    <div class="response-line line-error"><strong>{{ t('response.error') }}</strong> <span class="line-message">{{ result.message }}</span></div>
+    {% endif %}
+{% endfor %}
+</div>

@@ -7,6 +7,7 @@ This directory holds the developer documentation of Campanella Lite. It grows to
 | Document | Describes |
 | --- | --- |
 | [installation.md](installation.md) | Requirements, web server, first-time setup, permissions, updating |
+| [files.md](files.md) | File repository: uploads, ids, manifest, accepted types, `file` commands |
 | [architecture.md](architecture.md) | Components, write path and read path, implementation status |
 | [data-model.md](data-model.md) | Entities, file formats, identifiers, validation rules and violation codes |
 | [command-language.md](command-language.md) | Syntax, batches, paths, responses, commands, developer CLI |
