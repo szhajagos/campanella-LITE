@@ -21,7 +21,9 @@
     "require": {
         "php": ">=8.3",
         "ext-mbstring": "*",
-        "symfony/yaml": "^7.4"
+        "league/commonmark": "^2.7",
+        "symfony/yaml": "^7.4",
+        "twig/twig": "^3.21"
     },
     "require-dev": {
         "phpstan/phpstan": "^2.1",

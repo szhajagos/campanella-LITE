@@ -14,9 +14,10 @@ final class EntityRef
     public const PAGE = 'page';
     public const CONTENT = 'content';
     public const MENU = 'menu';
+    public const REDIRECTS = 'redirects';
 
     /**
-     * @param self::SITE|self::LAYOUT|self::PAGE|self::CONTENT|self::MENU $type
+     * @param self::SITE|self::LAYOUT|self::PAGE|self::CONTENT|self::MENU|self::REDIRECTS $type
      */
     private function __construct(
         public readonly string $type,
@@ -47,6 +48,11 @@ final class EntityRef
     public static function menu(string $name): self
     {
         return new self(self::MENU, $name);
+    }
+
+    public static function redirects(): self
+    {
+        return new self(self::REDIRECTS, '');
     }
 
     public function key(): string

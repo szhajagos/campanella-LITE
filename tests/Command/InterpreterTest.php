@@ -220,7 +220,7 @@ final class InterpreterTest extends TestCase
         /** @var array{columns: list<string>, rows: list<list<string>>} $pages */
         $pages = $result->lines[0]->output?->value;
         self::assertSame(['id', 'path', 'status', 'layout', 'title'], $pages['columns']);
-        self::assertSame(['1', '/node/1 (/)', 'published', 'default', 'Home'], $pages['rows'][0]);
+        self::assertSame(['1', '/', 'published', 'default', 'Home'], $pages['rows'][0]);
         self::assertSame(['2', '/about', 'published', 'default', 'About us'], $pages['rows'][1]);
         self::assertSame(2, $result->lines[0]->message->params['count']);
         self::assertSame(5, $result->lines[1]->message->params['count']);

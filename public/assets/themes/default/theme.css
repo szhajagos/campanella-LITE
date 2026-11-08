@@ -1,0 +1,55 @@
+/* Campanella Lite – default theme. Bootstrap 5 does the heavy lifting. */
+
+:root {
+    --cl-region-gap: 1.5rem;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+#content {
+    flex: 1 0 auto;
+}
+
+.skip-link {
+    position: absolute;
+    top: .5rem;
+    left: .5rem;
+    z-index: 1000;
+    padding: .5rem 1rem;
+    background: var(--bs-body-bg);
+}
+
+.region {
+    padding-block: calc(var(--cl-region-gap) / 2);
+}
+
+.region-header {
+    padding-top: var(--cl-region-gap);
+}
+
+.region-footer {
+    margin-top: var(--cl-region-gap);
+    border-top: 1px solid var(--bs-border-color);
+    color: var(--bs-secondary-color);
+    font-size: .9rem;
+}
+
+.block + .block {
+    margin-top: 1rem;
+}
+
+.block > :last-child {
+    margin-bottom: 0;
+}
+
+.languages {
+    padding-top: .5rem;
+}
+
+.not-found {
+    padding-block: 4rem;
+}

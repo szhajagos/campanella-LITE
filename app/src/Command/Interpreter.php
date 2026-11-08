@@ -14,6 +14,7 @@ use Campanella\Lite\Exception\InvalidDataException;
 use Campanella\Lite\I18n\Message;
 use Campanella\Lite\Project\EntityRef;
 use Campanella\Lite\Project\ProjectRepository;
+use Campanella\Lite\Routing\RedirectMaintainer;
 use Campanella\Lite\Storage\WriteLock;
 use Campanella\Lite\Validation\ProjectValidator;
 use Campanella\Lite\Validation\Violation;
@@ -24,9 +25,12 @@ use Campanella\Lite\Validation\Violation;
  * 1. Parse the whole batch; a syntax error rejects it.
  * 2. Under the write lock, load the project and run every command on an
  *    in-memory workspace. The first failing command rejects the batch.
- * 3. Validate the result. Only violations the batch would introduce count,
- *    so a problem that already existed never blocks unrelated work.
- * 4. Write the changed entities, unless this is a dry run.
+ * 3. Turn changed aliases into redirects, then validate the result. Only
+ *    violations the batch would introduce count, so a problem that already
+ *    existed never blocks unrelated work.
+ * 4. Write the changed entities, unless this is a dry run, and tell the
+ *    listener (which clears the cache of generated pages).
+ * 5. Run the deferred work of commands such as "build" and "cache clear".
  */
 final class Interpreter
 {
@@ -36,6 +40,8 @@ final class Interpreter
         private readonly CommandRegistry $registry,
         private readonly ProjectValidator $validator = new ProjectValidator(),
         private readonly BatchParser $parser = new BatchParser(),
+        private readonly RedirectMaintainer $redirects = new RedirectMaintainer(),
+        private readonly ?\Closure $onCommit = null,
     ) {
     }
 
@@ -70,6 +76,7 @@ final class Interpreter
 
         $workspace = new Workspace($project);
         $lines = [];
+        $deferred = [];
         $failed = false;
 
         foreach ($batch->commands as $command) {
@@ -81,6 +88,11 @@ final class Interpreter
             try {
                 [$handler, $invocation] = $this->registry->resolve($command);
                 $result = $handler->execute($invocation, $workspace);
+
+                if ($result->afterCommit !== null) {
+                    $deferred[count($lines)] = $result->afterCommit;
+                }
+
                 $lines[] = new LineResult(
                     $command->line,
                     $command->source,
@@ -99,9 +111,15 @@ final class Interpreter
             return new BatchResult(Outcome::Rejected, $lines, new Message('batch.rejected'), $dryRun);
         }
 
+        if ($workspace->changes() !== []) {
+            $workspace->putRedirects($this->redirects->update($workspace->original(), $workspace->project())->redirects);
+        }
+
         $changes = $workspace->changes();
 
         if ($changes === []) {
+            $lines = $dryRun ? $lines : $this->runDeferred($lines, $deferred);
+
             return new BatchResult(Outcome::Unchanged, $lines, new Message('batch.unchanged'), $dryRun);
         }
 
@@ -120,7 +138,37 @@ final class Interpreter
 
         $this->repository->commit($workspace->project(), $changes);
 
+        if ($this->onCommit !== null) {
+            ($this->onCommit)($changes);
+        }
+
+        $lines = $this->runDeferred($lines, $deferred);
+
         return new BatchResult(Outcome::Applied, $lines, new Message('batch.applied', $summary), false, [], $files);
+    }
+
+    /**
+     * Runs the work commands deferred until after the commit, and puts their results in place.
+     *
+     * @param list<LineResult>                      $lines
+     * @param array<int, \Closure(): CommandResult> $deferred line index => work
+     *
+     * @return list<LineResult>
+     */
+    private function runDeferred(array $lines, array $deferred): array
+    {
+        foreach ($deferred as $index => $work) {
+            $line = $lines[$index];
+
+            try {
+                $result = $work();
+                $lines[$index] = new LineResult($line->line, $line->source, LineStatus::Ok, $result->message, $result->output, $line->command);
+            } catch (CommandFailed $failure) {
+                $lines[$index] = new LineResult($line->line, $line->source, LineStatus::Error, $failure->reason, null, $line->command);
+            }
+        }
+
+        return array_values($lines);
     }
 
     /**

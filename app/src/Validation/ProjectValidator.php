@@ -74,6 +74,12 @@ final class ProjectValidator
             $this->validateMenu($menu, $project);
         }
 
+        foreach ($project->redirects->toArray() as $path => $target) {
+            if ($project->page($target['page']) === null) {
+                $this->add('redirect.unknown_page', 'redirect.' . $path, ['path' => $path, 'page' => $target['page']]);
+            }
+        }
+
         return $this->violations;
     }
 

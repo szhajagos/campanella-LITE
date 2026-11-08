@@ -11,6 +11,7 @@ use Campanella\Lite\Model\Layout;
 use Campanella\Lite\Model\Menu;
 use Campanella\Lite\Model\Page;
 use Campanella\Lite\Model\Project;
+use Campanella\Lite\Model\Redirects;
 use Campanella\Lite\Model\Site;
 use Campanella\Lite\Storage\FileStore;
 use Campanella\Lite\Storage\FrontMatterCodec;
@@ -24,6 +25,7 @@ use Campanella\Lite\Storage\YamlCodec;
  *     pages/{id}.yaml
  *     content/{name}/{language}.md
  *     menus/{name}.yaml
+ *     redirects.yaml                (optional)
  *
  * The repository checks structure (file names, field types). It does not
  * check references between entities; that is the validator's job, and it
@@ -36,6 +38,7 @@ final class ProjectRepository
     public const PAGE_DIR = 'pages';
     public const CONTENT_DIR = 'content';
     public const MENU_DIR = 'menus';
+    public const REDIRECTS_FILE = 'redirects.yaml';
 
     public function __construct(private readonly FileStore $store)
     {
@@ -49,6 +52,7 @@ final class ProjectRepository
             $this->loadPages(),
             $this->loadContents(),
             $this->loadMenus(),
+            $this->loadRedirects(),
         );
     }
 
@@ -123,6 +127,20 @@ final class ProjectRepository
     }
 
     /**
+     * Writes redirects.yaml, or removes it when there are no redirects.
+     */
+    public function saveRedirects(Redirects $redirects): void
+    {
+        if ($redirects->isEmpty()) {
+            $this->store->delete(self::REDIRECTS_FILE);
+
+            return;
+        }
+
+        $this->writeYaml(self::REDIRECTS_FILE, $redirects->toArray());
+    }
+
+    /**
      * Writes the given entities as they are in the project, and deletes those
      * that no longer exist in it.
      *
@@ -137,6 +155,7 @@ final class ProjectRepository
                 EntityRef::PAGE => ($page = $project->page((int) $ref->id)) !== null ? $this->savePage($page) : $this->deletePage((int) $ref->id),
                 EntityRef::CONTENT => ($content = $project->content($ref->id)) !== null ? $this->saveContent($content) : $this->deleteContent($ref->id),
                 EntityRef::MENU => ($menu = $project->menu($ref->id)) !== null ? $this->saveMenu($menu) : $this->deleteMenu($ref->id),
+                EntityRef::REDIRECTS => $this->saveRedirects($project->redirects),
             };
         }
     }
@@ -152,6 +171,7 @@ final class ProjectRepository
             EntityRef::PAGE => self::PAGE_DIR . '/' . $ref->id . '.yaml',
             EntityRef::CONTENT => self::CONTENT_DIR . '/' . $ref->id . '/',
             EntityRef::MENU => self::MENU_DIR . '/' . $ref->id . '.yaml',
+            EntityRef::REDIRECTS => self::REDIRECTS_FILE,
         };
     }
 
@@ -236,6 +256,15 @@ final class ProjectRepository
         }
 
         return $menus;
+    }
+
+    private function loadRedirects(): Redirects
+    {
+        if (!$this->store->exists(self::REDIRECTS_FILE)) {
+            return Redirects::none();
+        }
+
+        return Redirects::fromArray($this->readYaml(self::REDIRECTS_FILE), self::REDIRECTS_FILE);
     }
 
     /**

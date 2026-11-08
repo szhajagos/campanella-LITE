@@ -7,6 +7,8 @@ namespace Campanella\Lite;
 use Campanella\Lite\Command\CommandRegistry;
 use Campanella\Lite\Command\Format\JsonFormatter;
 use Campanella\Lite\Command\Format\TextFormatter;
+use Campanella\Lite\Command\Handler\BuildCommand;
+use Campanella\Lite\Command\Handler\CacheClearCommand;
 use Campanella\Lite\Command\Handler\CheckCommand;
 use Campanella\Lite\Command\Handler\Content\ContentCreateCommand;
 use Campanella\Lite\Command\Handler\Content\ContentDeleteCommand;
@@ -32,10 +34,17 @@ use Campanella\Lite\Command\Handler\Page\PageCreateCommand;
 use Campanella\Lite\Command\Handler\Page\PageDeleteCommand;
 use Campanella\Lite\Command\Handler\Page\PagePlacementCommand;
 use Campanella\Lite\Command\Handler\Page\PageStatusCommand;
+use Campanella\Lite\Command\Handler\RedirectRemoveCommand;
 use Campanella\Lite\Command\Handler\SetCommand;
 use Campanella\Lite\Command\Interpreter;
+use Campanella\Lite\Http\FrontController;
 use Campanella\Lite\I18n\Translator;
+use Campanella\Lite\Project\EntityRef;
 use Campanella\Lite\Project\ProjectRepository;
+use Campanella\Lite\Render\PageCache;
+use Campanella\Lite\Render\PageRenderer;
+use Campanella\Lite\Render\SiteBuilder;
+use Campanella\Lite\Routing\Router;
 use Campanella\Lite\Storage\FileStore;
 use Campanella\Lite\Storage\WriteLock;
 
@@ -49,6 +58,7 @@ final class Application
 {
     private ?CommandRegistry $registry = null;
     private ?Translator $translator = null;
+    private ?PageRenderer $renderer = null;
 
     public function __construct(public readonly Paths $paths)
     {
@@ -56,11 +66,48 @@ final class Application
 
     public function interpreter(): Interpreter
     {
+        $cache = $this->pageCache();
+
         return new Interpreter(
-            new ProjectRepository(new FileStore($this->paths->project())),
-            new WriteLock($this->paths->writeLock()),
+            $this->repository(),
+            $this->lock(),
             $this->registry(),
+            // Any change may affect any page (menus, layouts, the site name), so all generated pages go.
+            onCommit: static function (array $changes) use ($cache): void {
+                /** @var list<EntityRef> $changes */
+                $cache->clear();
+            },
         );
+    }
+
+    public function frontController(): FrontController
+    {
+        return new FrontController($this->repository(), $this->lock(), new Router(), $this->renderer(), $this->pageCache());
+    }
+
+    public function repository(): ProjectRepository
+    {
+        return new ProjectRepository(new FileStore($this->paths->project()));
+    }
+
+    public function lock(): WriteLock
+    {
+        return new WriteLock($this->paths->writeLock());
+    }
+
+    public function renderer(): PageRenderer
+    {
+        return $this->renderer ??= new PageRenderer(self::themesDirectory(), $this->translator(), $this->paths->var() . '/cache/twig');
+    }
+
+    public function pageCache(): PageCache
+    {
+        return new PageCache(new FileStore($this->paths->public()), new FileStore($this->paths->var()));
+    }
+
+    public function siteBuilder(): SiteBuilder
+    {
+        return new SiteBuilder($this->renderer(), $this->pageCache());
     }
 
     public function registry(): CommandRegistry
@@ -71,6 +118,9 @@ final class Application
                 new SetCommand(),
                 new ListCommand(),
                 new CheckCommand(),
+                new BuildCommand($this->siteBuilder()),
+                new CacheClearCommand($this->pageCache()),
+                new RedirectRemoveCommand(),
                 new PageCreateCommand(),
                 new PageDeleteCommand(),
                 new PageAliasCommand(),
@@ -118,6 +168,12 @@ final class Application
     public function jsonFormatter(): JsonFormatter
     {
         return new JsonFormatter($this->translator());
+    }
+
+    /** Built-in themes: templates in {theme}/templates, assets in public/assets/themes/{theme}. */
+    public static function themesDirectory(): string
+    {
+        return dirname(__DIR__) . '/themes';
     }
 
     /** The message catalogues ship with the code, not with the project. */

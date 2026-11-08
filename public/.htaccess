@@ -1,0 +1,31 @@
+# Campanella Lite – Apache configuration for the web root (public/).
+# Requires mod_rewrite. Generated pages are served as static files;
+# everything else goes to the front controller.
+
+Options -Indexes -MultiViews
+DirectoryIndex index.html index.php
+
+# Serve /about from about/index.html without redirecting to /about/
+DirectorySlash Off
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Hidden files are never served
+    RewriteRule (^|/)\. - [F,L]
+
+    # Existing files: assets and generated pages
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+
+    # Generated page of a directory-like address: /about -> about/index.html
+    RewriteCond %{REQUEST_FILENAME}/index.html -f
+    RewriteRule ^(.*?)/?$ $1/index.html [L]
+
+    # Everything else: the front controller generates or answers it
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>

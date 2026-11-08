@@ -13,17 +13,18 @@ use Campanella\Lite\Command\Signature;
 use Campanella\Lite\Command\Workspace;
 use Campanella\Lite\Model\LocalizedText;
 use Campanella\Lite\Model\Project;
+use Campanella\Lite\Routing\Urls;
 
 final class ListCommand implements CommandHandler
 {
-    public const TYPES = ['pages', 'layouts', 'content', 'menus', 'languages'];
+    public const TYPES = ['pages', 'layouts', 'content', 'menus', 'languages', 'redirects'];
 
     public function signature(): Signature
     {
         return new Signature(
             name: 'list',
             arguments: ['type'],
-            examples: ['list pages', 'list layouts', 'list content', 'list menus', 'list languages'],
+            examples: ['list pages', 'list layouts', 'list content', 'list menus', 'list languages', 'list redirects'],
             readOnly: true,
         );
     }
@@ -40,6 +41,7 @@ final class ListCommand implements CommandHandler
             'content' => $this->contents($project, $language),
             'menus' => $this->menus($project),
             'languages' => $this->languages($project),
+            'redirects' => $this->redirects($project),
             default => throw CommandFailed::because('list.unknown_type', ['type' => $type, 'types' => implode(', ', self::TYPES)]),
         };
 
@@ -56,7 +58,7 @@ final class ListCommand implements CommandHandler
         foreach ($project->pages as $page) {
             $rows[] = [
                 (string) $page->id,
-                $page->path($language) . ($project->site->frontPage === $page->id ? ' (/)' : ''),
+                Urls::page($project->site, $page, $language),
                 $page->status->value,
                 $page->layout,
                 self::text($page->title, $language),
@@ -109,6 +111,23 @@ final class ListCommand implements CommandHandler
         }
 
         return Output::table(['language', 'default'], $rows);
+    }
+
+    private function redirects(Project $project): Output
+    {
+        $rows = [];
+
+        foreach ($project->redirects->toArray() as $path => $target) {
+            $page = $project->page($target['page']);
+            $rows[] = [
+                $path,
+                (string) $target['page'],
+                $target['language'],
+                $page === null ? '' : Urls::page($project->site, $page, $target['language']),
+            ];
+        }
+
+        return Output::table(['path', 'page', 'language', 'target'], $rows);
     }
 
     private static function text(LocalizedText $text, string $language): string

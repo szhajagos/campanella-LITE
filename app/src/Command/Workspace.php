@@ -9,6 +9,7 @@ use Campanella\Lite\Model\Layout;
 use Campanella\Lite\Model\Menu;
 use Campanella\Lite\Model\Page;
 use Campanella\Lite\Model\Project;
+use Campanella\Lite\Model\Redirects;
 use Campanella\Lite\Model\Site;
 use Campanella\Lite\Project\EntityRef;
 
@@ -100,6 +101,12 @@ final class Workspace
         $this->touch(EntityRef::menu($name));
     }
 
+    public function putRedirects(Redirects $redirects): void
+    {
+        $this->project = $this->project->withRedirects($redirects);
+        $this->touch(EntityRef::redirects());
+    }
+
     /**
      * The touched entities that really differ from the original, in the order they were first touched.
      *
@@ -129,6 +136,7 @@ final class Workspace
             EntityRef::PAGE => $project->page((int) $ref->id)?->toArray(),
             EntityRef::CONTENT => $project->content($ref->id)?->toArray(),
             EntityRef::MENU => $project->menu($ref->id)?->toArray(),
+            EntityRef::REDIRECTS => $project->redirects->toArray(),
         };
     }
 }

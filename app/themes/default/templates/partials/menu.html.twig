@@ -1,0 +1,25 @@
+<nav class="navbar navbar-expand-md menu menu-{{ menu.name }}" aria-label="{{ menu.name }}">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-{{ menu.name }}" aria-controls="menu-{{ menu.name }}" aria-expanded="false" aria-label="{{ t('toggle_navigation', site.language) }}">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="menu-{{ menu.name }}">
+        <ul class="navbar-nav">
+        {% for item in menu.items %}
+            {% if item.children %}
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle{% if item.active %} active{% endif %}" href="{{ item.url ?? '#' }}" role="button" data-bs-toggle="dropdown" aria-expanded="false">{{ item.label }}</a>
+                <ul class="dropdown-menu">
+                {% for child in item.children %}
+                    <li><a class="dropdown-item{% if child.active %} active{% endif %}" href="{{ child.url ?? '#' }}"{% if child.current %} aria-current="page"{% endif %}>{{ child.label }}</a></li>
+                {% endfor %}
+                </ul>
+            </li>
+            {% else %}
+            <li class="nav-item">
+                <a class="nav-link{% if item.active %} active{% endif %}" href="{{ item.url ?? '#' }}"{% if item.current %} aria-current="page"{% endif %}>{{ item.label }}</a>
+            </li>
+            {% endif %}
+        {% endfor %}
+        </ul>
+    </div>
+</nav>

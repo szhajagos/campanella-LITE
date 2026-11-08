@@ -38,3 +38,16 @@ Added, Changed, Deprecated, Removed, Fixed, Security.
 - Language commands: `language add`, `language remove`, `language default`.
 - `check` lists every validation problem of the website.
 - Deleting something that is still used fails with a list of what uses it; `--force` also removes those references.
+- Public website: front controller (`public/index.php`) that renders a page on its first visit and stores it as static HTML in the web root; Apache configuration (`public/.htaccess`) that serves stored pages without PHP.
+- Addresses per language: the default language without a prefix, other languages under `/{code}/`; `/node/{id}` for pages without an alias; 301 redirects to the canonical address.
+- Automatic redirects from old aliases (`project/redirects.yaml`), maintained at the end of every batch; `list redirects` and `redirect remove`.
+- Default theme with Twig templates and Bootstrap 5.3.8: regions and columns on the grid, navbar menus with dropdowns, language switcher, `hreflang` and canonical links, accessible 404 page.
+- Markdown rendering with league/commonmark; raw HTML in content is escaped and unsafe links are removed.
+- Page cache with a manifest, so only generated files are ever deleted; every committed change clears it.
+- `build` and `cache clear` commands, run after the batch has been written.
+- Development router for PHP's built-in web server (`app/dev-router.php`).
+- Developer documentation of the public website: `docs/generator.md`.
+
+### Security
+
+- The front controller answers only `GET` and `HEAD`, refuses paths with `..`, `//`, backslashes or control characters, and never shows error details to visitors.

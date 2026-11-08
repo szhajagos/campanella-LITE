@@ -35,11 +35,24 @@ bin/campanella --root=/tmp/demo --dry-run -e "set site.name \"New name\""
 
 See [command-language.md](command-language.md) for the commands.
 
+## Viewing the website
+
+PHP's built-in web server with the development router behaves like the Apache configuration:
+
+```
+php -S localhost:8000 -t public app/dev-router.php
+```
+
+It needs a `project/` directory in the repository root (ignored by git). The sample project is a good start: `cp -r tests/Fixtures/valid-project project`. Generated pages appear in `public/` and are ignored by git as well. See [generator.md](generator.md).
+
 ## Directory layout
 
 ```
 app/src/          # Campanella\Lite\ – application code (PSR-4)
 app/translations/ # Message catalogues (messages.{locale}.yaml)
+app/themes/       # Built-in themes (Twig templates)
+app/dev-router.php# Router for PHP's built-in web server
+public/           # Web root: front controller, .htaccess, assets, generated pages
 bin/campanella    # Developer CLI
 app/vendor/       # Composer dependencies (not committed)
 tests/            # Campanella\Lite\Tests\ – PHPUnit tests

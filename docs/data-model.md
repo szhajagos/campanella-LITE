@@ -10,7 +10,8 @@ project/
 ├── layouts/{name}.yaml           # Layout, with its regions and columns
 ├── pages/{id}.yaml               # Page
 ├── content/{name}/{language}.md  # Content, one file per language
-└── menus/{name}.yaml             # Menu
+├── menus/{name}.yaml             # Menu
+└── redirects.yaml                # Old addresses → pages (optional, maintained automatically)
 ```
 
 The name inside a file must match its file name: `layouts/default.yaml` contains `name: default`, `pages/2.yaml` contains `id: 2`. Unknown keys are rejected, so typos in hand-edited files are caught.
@@ -106,7 +107,7 @@ placements:
 | `status` | `draft` or `published` | no | Default `draft`; drafts are never generated for visitors |
 | `placements` | mapping of `region.column` to content names | no | Overrides the layout's default content for those columns |
 
-A page without an alias is available at `/node/{id}`. With an alias, `/node/{id}` and earlier aliases redirect to it (milestone 4).
+A page without an alias is available at `/node/{id}`. With an alias, `/node/{id}` and earlier aliases redirect to it. In languages other than the default, addresses are prefixed with the language code (`/hu/rolunk`); see [generator.md](generator.md#addresses).
 
 ### Content (`content/{name}/{language}.md`)
 
@@ -192,3 +193,4 @@ An alias:
 | `menu.invalid_url` | An item's URL is not allowed | `url` |
 | `text.unknown_language` | A text uses a language that is not enabled | `language` |
 | `text.missing_default_language` | A required text has no value in the default language | `language` |
+| `redirect.unknown_page` | A redirect points to a page that does not exist | `path`, `page` |

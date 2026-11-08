@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ page.is_front ? site.name : page.title ~ ' – ' ~ site.name }}{% endblock %}
+
+{% block meta %}
+    {% if page.description %}
+    <meta name="description" content="{{ page.description }}">
+    {% endif %}
+    {% if page.canonical %}
+    <link rel="canonical" href="{{ page.canonical }}">
+    {% endif %}
+    {% if alternates|length > 1 %}
+    {% for alternate in alternates %}
+    <link rel="alternate" hreflang="{{ alternate.language }}" href="{{ alternate.absolute_url }}">
+    {% endfor %}
+    {% endif %}
+{% endblock %}
+
+{% block body %}
+    {% include 'partials/languages.html.twig' %}
+    <div id="content">
+    {% for region in regions %}
+        <div class="region region-{{ region.name }}">
+            <div class="{{ region.container }}">
+                <div class="row">
+                {% for column in region.columns %}
+                    <div class="col-md-{{ column.width }} column column-{{ column.name }}">
+                        {% if column.menu %}
+                            {% include 'partials/menu.html.twig' with { menu: column.menu } %}
+                        {% endif %}
+                        {% for block in column.blocks %}
+                            <div class="block block-{{ block.name }}">{{ block.html|raw }}</div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+{% endblock %}

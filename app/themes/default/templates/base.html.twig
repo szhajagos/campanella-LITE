@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="{{ site.language }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{{ site.name }}{% endblock %}</title>
+    {% block meta %}{% endblock %}
+    <link rel="stylesheet" href="{{ assets }}/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ assets }}/themes/default/theme.css">
+</head>
+<body>
+    <a class="visually-hidden-focusable skip-link" href="#content">{{ t('skip_to_content', site.language) }}</a>
+    {% block body %}{% endblock %}
+    <script src="{{ assets }}/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

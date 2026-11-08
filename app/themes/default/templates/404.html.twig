@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ t('not_found_title', site.language) ~ ' – ' ~ site.name }}{% endblock %}
+
+{% block meta %}
+    <meta name="robots" content="noindex">
+{% endblock %}
+
+{% block body %}
+    <div id="content" class="container not-found">
+        <h1>{{ t('not_found_title', site.language) }}</h1>
+        <p class="lead">{{ t('not_found_text', site.language) }}</p>
+        <p><a class="btn btn-primary" href="{{ home }}">{{ t('back_home', site.language) }}</a></p>
+    </div>
+{% endblock %}

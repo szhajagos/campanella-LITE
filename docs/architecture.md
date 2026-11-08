@@ -32,7 +32,9 @@ The rule that holds the design together: **the command interpreter is the only c
 | Message catalogue | `Campanella\Lite\I18n` | M2 | Done |
 | Developer CLI (`bin/campanella`) | `Campanella\Lite\Cli` | M2 | Done |
 | Entity commands (`page`, `content`, `layout`, `menu`, `language`, `check`) | `Campanella\Lite\Command\Handler` | M3 | Done |
-| Generator and front controller | `Campanella\Lite\Generator` | M4 | Planned |
+| Routing and redirects | `Campanella\Lite\Routing` | M4 | Done |
+| Renderer, theme, page cache, build | `Campanella\Lite\Render` | M4 | Done |
+| Front controller | `Campanella\Lite\Http` | M4 | Done |
 | Admin dashboard | `Campanella\Lite\Admin` | M5 | Planned |
 
 ## Layers built in M1
@@ -87,6 +89,14 @@ The handlers in `Command\Handler\{Page,Content,Layout,Menu,Language}` build on t
 
 Model objects offer typed `with…()` methods, so a handler changes an entity by building a new one; the workspace keeps track of what changed.
 
+### Public website (M4)
+
+- **`Routing\Urls`** builds the canonical address of a page per language; **`Routing\Router`** resolves a requested path to a page, a redirect or "not found"; **`Routing\RedirectMaintainer`** turns changed aliases into redirects at the end of each batch.
+- **`Render\PageRenderer`** renders pages with Twig and CommonMark; **`Render\PageCache`** stores generated pages in the web root and records them in a manifest; **`Render\SiteBuilder`** generates pages ahead of time.
+- **`Http\FrontController`** answers requests the web server could not serve from a file.
+
+Commands that touch files outside the project (`build`, `cache clear`) return deferred work, which the interpreter runs only after the batch has been written. See [generator.md](generator.md).
+
 ### I18n (`Campanella\Lite\I18n`)
 
 A `Message` is a key plus parameters; the `Translator` turns it into text from `app/translations/messages.{locale}.yaml`, falling back to English. Validation violations are translated through the `violation.` key prefix. A test checks that every key used in the code has an English text.
@@ -106,5 +116,5 @@ A `Message` is a key plus parameters; the `Translator` turns it into text from `
 3. Apply each command to the workspace. The first failing command rejects the batch.
 4. Validate the result. Violations that were not there before reject the batch.
 5. *(M6)* Store an undo snapshot of the files about to change.
-6. Write the changed entities (or, on a dry run, only report them). *(M4–M6)* Append to the command log, clear affected cached pages.
+6. Write the changed entities (or, on a dry run, only report them), clear the generated pages, and run deferred work such as `build`. *(M6)* Append to the command log.
 7. Release the lock and return the responses.

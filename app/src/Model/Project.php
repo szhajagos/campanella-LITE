@@ -24,6 +24,8 @@ final class Project
     /** @var array<string, Menu> */
     public readonly array $menus;
 
+    public readonly Redirects $redirects;
+
     /**
      * @param list<Layout>  $layouts
      * @param list<Page>    $pages
@@ -36,7 +38,9 @@ final class Project
         array $pages = [],
         array $contents = [],
         array $menus = [],
+        ?Redirects $redirects = null,
     ) {
+        $this->redirects = $redirects ?? Redirects::none();
         $this->layouts = self::index($layouts, static fn (Layout $layout): string => $layout->name);
         $this->contents = self::index($contents, static fn (Content $content): string => $content->name);
         $this->menus = self::index($menus, static fn (Menu $menu): string => $menu->name);
@@ -140,6 +144,11 @@ final class Project
         return $this->rebuild(menus: $menus);
     }
 
+    public function withRedirects(Redirects $redirects): self
+    {
+        return $this->rebuild(redirects: $redirects);
+    }
+
     /**
      * Finds a page by its id ("2") or by an alias in any language ("/about").
      */
@@ -170,6 +179,7 @@ final class Project
         ?array $pages = null,
         ?array $contents = null,
         ?array $menus = null,
+        ?Redirects $redirects = null,
     ): self {
         return new self(
             $site ?? $this->site,
@@ -177,6 +187,7 @@ final class Project
             array_values($pages ?? $this->pages),
             array_values($contents ?? $this->contents),
             array_values($menus ?? $this->menus),
+            $redirects ?? $this->redirects,
         );
     }
 

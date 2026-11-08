@@ -4,7 +4,7 @@
 
 Campanella Lite is managed through a small, documented command language instead of forms and a database. Every change, whether typed by an administrator or (later) proposed by an AI agent, goes through the same command interpreter, which validates it, applies it atomically and logs it. Visitors get plain static HTML.
 
-> **Status: pre-alpha.** Milestones 1–3 are done: storage, data model, validation, the command interpreter and the commands that build a website. Generating the public site comes next; there is no usable release yet. The concepts below describe the planned MVP and may still change. See [ROADMAP.md](ROADMAP.md) for decisions and progress.
+> **Status: pre-alpha.** Milestones 1–4 are done: storage, data model, validation, the command interpreter, the commands that build a website, and the generator that publishes it. The admin dashboard comes next; there is no usable release yet. The concepts below describe the planned MVP and may still change. See [ROADMAP.md](ROADMAP.md) for decisions and progress.
 
 ---
 
@@ -167,7 +167,7 @@ Only `public/` should be exposed by the web server.
 
 - [ROADMAP.md](ROADMAP.md): decisions made so far and planned work
 - [CHANGELOG.md](CHANGELOG.md): changes in each release
-- [docs/](docs/): developer documentation (grows with the code), including the [architecture](docs/architecture.md), the [data model](docs/data-model.md), the [command language](docs/command-language.md) and the [development guide](docs/development.md)
+- [docs/](docs/): developer documentation (grows with the code), including the [architecture](docs/architecture.md), the [data model](docs/data-model.md), the [command language](docs/command-language.md), the [public website](docs/generator.md) and the [development guide](docs/development.md)
 
 A user guide will be added once there is something to guide through.
 

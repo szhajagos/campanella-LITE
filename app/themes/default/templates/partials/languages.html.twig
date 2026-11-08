@@ -1,0 +1,12 @@
+{% if alternates|length > 1 %}
+<nav class="languages container text-end small" aria-label="{{ t('languages', site.language) }}">
+    {% for alternate in alternates %}
+        {% if alternate.current %}
+        <span class="fw-bold" aria-current="true" lang="{{ alternate.language }}">{{ alternate.language|upper }}</span>
+        {% else %}
+        <a href="{{ alternate.url }}" hreflang="{{ alternate.language }}" lang="{{ alternate.language }}">{{ alternate.language|upper }}</a>
+        {% endif %}
+        {% if not loop.last %}<span aria-hidden="true">·</span>{% endif %}
+    {% endfor %}
+</nav>
+{% endif %}

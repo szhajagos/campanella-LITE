@@ -162,7 +162,7 @@ Structural changes (adding regions, placing content, creating pages) have their 
 
 ### `list <type>`
 
-Lists `pages`, `layouts`, `content`, `menus` or `languages` as a table.
+Lists `pages`, `layouts`, `content`, `menus`, `languages` or `redirects` as a table. Pages are listed with their address in the default language.
 
 ### `help [<command>]`
 
@@ -266,6 +266,17 @@ set page.1.title.hu "Kezdőlap"
 set menu.main.items.1.label.hu "Kezdőlap"
 language default hu
 ```
+
+## Publishing
+
+| Command | Description |
+| --- | --- |
+| `build [<page>]` | Generates the published pages (or one page) in every language now, instead of on their first visit. |
+| `cache clear` | Deletes the generated pages; they are generated again on their next visit. |
+| `list redirects` | Lists the old addresses that redirect to pages. |
+| `redirect remove <path>` | Removes a redirect. |
+
+`build` and `cache clear` run after the batch has been written, so they see its changes; they do nothing on a dry run or in a rejected batch. Every batch that changes the website clears the generated pages by itself. Changing or removing an alias records a redirect from the old address automatically. See [generator.md](generator.md).
 
 ## Message keys
 
