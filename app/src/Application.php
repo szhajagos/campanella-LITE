@@ -79,7 +79,7 @@ use Twig\Loader\FilesystemLoader;
 final class Application
 {
     /** The released version; the release workflow checks it against the tag. */
-    public const VERSION = '0.1.0';
+    public const VERSION = '0.2.0';
 
     private ?CommandRegistry $registry = null;
     private ?Translator $translator = null;

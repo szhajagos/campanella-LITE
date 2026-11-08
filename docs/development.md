@@ -94,5 +94,5 @@ Run it again to update the dependencies. With a lock file, CI runs `composer ins
 ## Releases
 
 1. Set `Application::VERSION` and move the `[Unreleased]` changes in `CHANGELOG.md` under a new version heading.
-2. Commit, then tag and push: `git tag -a v0.1.0 -m "Campanella Lite 0.1.0"` and `git push origin v0.1.0`.
+2. Commit, then tag and push: `git tag -a v0.2.0 -m "Campanella Lite 0.2.0"` and `git push origin v0.2.0`.
 3. The **Release** workflow checks that the tag, `Application::VERSION` and the changelog agree, runs the checks, builds `campanella-lite-<version>.zip` (the repository without the `export-ignore` files of `.gitattributes`, plus `app/vendor/` without development packages) with a SHA-256 checksum, and publishes a GitHub release with the changelog section as notes.

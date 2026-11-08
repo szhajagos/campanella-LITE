@@ -17,7 +17,7 @@ No database is needed. Composer is only needed when you install from the source 
 **Release package (recommended).** Download `campanella-lite-<version>.zip` from the [releases page](https://github.com/szhajagos/campanella-LITE/releases). It contains everything, Composer dependencies included. The `.sha256` file next to it lets you check the download:
 
 ```
-sha256sum -c campanella-lite-0.1.0.zip.sha256
+sha256sum -c campanella-lite-0.2.0.zip.sha256
 ```
 
 Unpack it and upload the contents of the `campanella-lite-<version>/` folder to the server.

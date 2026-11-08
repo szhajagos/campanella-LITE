@@ -4,7 +4,7 @@
 
 Campanella Lite is managed through a small, documented command language instead of forms and a database. Every change, whether typed by an administrator or (later) proposed by an AI agent, goes through the same command interpreter, which validates it, applies it atomically and logs it. Visitors get plain static HTML.
 
-> **Status: 0.1.0, the first release (alpha).** The MVP is complete: the command language and its interpreter, the public website generator, the admin dashboard, undo, the command log and the installer. It is ready to try, but expect changes before 1.0. See [ROADMAP.md](ROADMAP.md) for decisions and plans.
+> **Status: 0.2.0 (alpha).** The MVP is complete: the command language and its interpreter, the public website generator, the admin dashboard, undo, the command log and the installer. Version 0.2.0 adds a file repository: images, documents, audio and video, uploaded in the dashboard and shown on the website. It is ready to try, but expect changes before 1.0. See [ROADMAP.md](ROADMAP.md) for decisions and plans.
 
 ---
 

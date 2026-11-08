@@ -58,7 +58,7 @@ Status: **Accepted** = agreed and binding; **Proposed** = current plan, open to 
 | 2026-11-08 | Files | Image sizes and WebP are derived files, not separate files: one id per upload. They are generated from the original (with GD, which also drops EXIF and GPS data) into the public directory, can always be regenerated, and are never stored in the manifest. Content uses `file:1042`; the generator picks the sizes (`srcset`, `<picture>` with WebP when the server supports it). | Accepted |
 | 2026-11-07 | URLs | When an alias changes, the old alias redirects (301) to the page's current alias, until another page takes the old alias. Redirects point to page ids, so renaming twice never creates a chain. | Accepted |
 
-## MVP (0.1.0)
+## MVP (0.1.0, released 2026-11-08)
 
 Built from the inside out: storage and command interpreter first, user interface last. From milestone 2 on, a developer CLI (`bin/campanella`) runs the same interpreter, so everything can be tested without a browser.
 
@@ -69,7 +69,7 @@ Built from the inside out: storage and command interpreter first, user interface
 - [x] **M5 – Admin dashboard:** login, command box, response box, command history, status bar.
 - [x] **M6 – Finishing:** command log, `undo`, installer, starter project with example pages, command language reference, `composer.lock` and release workflows.
 
-## 0.2.0 – Files
+## 0.2.0 – Files (released 2026-11-08)
 
 - [x] **M7 – File repository:** manifest and storage, numeric ids, type and size checks, upload in the admin (drag and drop into the command box, response with the file's data) and on the CLI, `list files` with filters, `get`/`set`, `file describe`, `file rename`, `file delete` (archive), `file purge`, undo of file commands, reference checks.
 - [x] **M8 – Files on the website:** `file:{id}` in Markdown, rendering per type (image with alt text and caption, audio, video, download link), image sizes and WebP with GD, file panel with thumbnails in the admin, versioned asset URLs (no more Ctrl+F5 after updates).

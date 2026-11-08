@@ -10,6 +10,12 @@ Added, Changed, Deprecated, Removed, Fixed, Security.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-08
+
+Files: images, documents, audio and video in one repository, uploaded in the dashboard and shown on the website.
+
+Upgrading from 0.1.0: replace the code as described in the installation guide, then run `cache clear`. The PHP extensions `gd` and `zip` are recommended, and PHP's upload limits (`upload_max_filesize`, `post_max_size`) should allow the files you want to upload.
+
 ### Added
 
 - File repository for images, documents, audio and video: every file gets a permanent numeric id and a manifest (`project/files/manifest/{id}.yaml`); the file itself is stored under a random name.
@@ -29,14 +35,14 @@ Added, Changed, Deprecated, Removed, Fixed, Security.
 - `cache clear` also removes published files; archiving, purging or renaming a file removes its outdated published copies.
 - The admin command box is emptied after a batch has run, so a second click on Run cannot repeat it. After a dry run or an error the text stays; Alt+↑ brings back an emptied batch.
 
+### Removed
+
+- The `Claude outputs/` folder (copies of the CI workflow files, added by mistake) is no longer part of the repository and the release package.
+
 ### Security
 
 - Uploaded files are recognised by their content; only types that cannot carry scripts or macros are accepted. PDFs with JavaScript, launch actions, embedded files or XFA forms and Office documents with macros or ActiveX controls are refused; images are decoded once and limited to 10000 px per side.
 - Images are published only as re-encoded copies without EXIF, GPS or camera data; uploaded originals are never served.
-
-### Removed
-
-- The `Claude outputs/` folder (copies of the CI workflow files, added by mistake) is no longer part of the repository and the release package.
 
 ## [0.1.0] - 2026-11-08
 
@@ -105,5 +111,6 @@ The first release: the complete MVP.
 - The web setup needs a random setup key that can only be read on the server (`config/setup-key.txt`, mode 0600); wrong keys are throttled and logged, and the key is deleted after the setup.
 - The setup puts `Require all denied` `.htaccess` files into `config/`, `project/` and `var/`.
 
-[Unreleased]: https://github.com/szhajagos/campanella-LITE/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/szhajagos/campanella-LITE/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/szhajagos/campanella-LITE/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/szhajagos/campanella-LITE/releases/tag/v0.1.0
