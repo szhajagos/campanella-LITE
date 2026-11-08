@@ -53,14 +53,15 @@ app/translations/ # Message catalogues (messages.{locale}.yaml)
 app/themes/       # Built-in themes (Twig templates)
 app/dev-router.php# Router for PHP's built-in web server
 app/admin/        # Twig templates of the admin dashboard
+app/starter/      # Starter websites copied by the installer (en, hu)
 public/           # Web root: front controller, admin entry, .htaccess, assets, generated pages
-config/           # Admin users (not committed)
+config/           # Admin users and the setup key (not committed)
 bin/campanella    # Developer CLI
 app/vendor/       # Composer dependencies (not committed)
 tests/            # Campanella\Lite\Tests\ – PHPUnit tests
 tests/Fixtures/   # Sample project directories used by tests
 docs/             # Developer documentation
-var/              # Caches, logs, locks (not committed)
+var/              # Caches, logs, locks, undo snapshots (not committed)
 ```
 
 ## Conventions
@@ -80,3 +81,18 @@ Only permissively licensed packages are used (MIT, BSD, Apache 2.0). Check befor
 ```
 composer licenses
 ```
+
+## composer.lock
+
+`composer.lock` is committed, so CI and the release package use exactly the tested versions. Without a local PHP it is created on GitHub:
+
+1. Actions → **Update dependencies** → *Run workflow*. It resolves the dependencies for PHP 8.3 (the platform set in `composer.json`), runs the checks and lists the versions.
+2. Download the `composer-lock` artifact from the run, put `composer.lock` into the repository root and commit it.
+
+Run it again to update the dependencies. With a lock file, CI runs `composer install` and checks that the lock matches `composer.json`; without one it falls back to `composer update`.
+
+## Releases
+
+1. Set `Application::VERSION` and move the `[Unreleased]` changes in `CHANGELOG.md` under a new version heading.
+2. Commit, then tag and push: `git tag -a v0.1.0 -m "Campanella Lite 0.1.0"` and `git push origin v0.1.0`.
+3. The **Release** workflow checks that the tag, `Application::VERSION` and the changelog agree, runs the checks, builds `campanella-lite-<version>.zip` (the repository without the `export-ignore` files of `.gitattributes`, plus `app/vendor/` without development packages) with a SHA-256 checksum, and publishes a GitHub release with the changelog section as notes.

@@ -33,7 +33,8 @@ final class AdminControllerTest extends CommandTestCase
         self::assertSame(200, $response->status);
         self::assertStringContainsString('action="/admin/login"', $response->body);
         self::assertStringContainsString('name="_csrf" value="' . $this->session->get('csrf') . '"', $response->body);
-        self::assertStringNotContainsString('There is no admin user yet', $response->body);
+        self::assertStringNotContainsString('setup_key', $response->body);
+        self::assertSame(404, $this->controller()->handle(new Request('POST', '/admin/setup'))->status);
     }
 
     public function testSendsSecurityHeaders(): void
@@ -44,13 +45,6 @@ final class AdminControllerTest extends CommandTestCase
         self::assertStringContainsString("script-src 'self'", $headers['Content-Security-Policy'] ?? '');
         self::assertSame('DENY', $headers['X-Frame-Options'] ?? null);
         self::assertSame('no-store', $headers['Cache-Control'] ?? null);
-    }
-
-    public function testTellsWhenThereIsNoUserYet(): void
-    {
-        unlink($this->application->paths->config() . '/users.yaml');
-
-        self::assertStringContainsString('bin/campanella --add-user=admin', $this->get('/admin')->body);
     }
 
     public function testLogsIn(): void

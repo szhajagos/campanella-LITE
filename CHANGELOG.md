@@ -10,6 +10,10 @@ Added, Changed, Deprecated, Removed, Fixed, Security.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-08
+
+The first release: the complete MVP.
+
 ### Added
 
 - Project documentation: README, ROADMAP, CHANGELOG and MIT LICENSE.
@@ -54,6 +58,15 @@ Added, Changed, Deprecated, Removed, Fixed, Security.
 - Developer documentation: `docs/admin.md`, `docs/security.md`.
 - Admin dashboard layout checked in a real browser (Chrome via Playwright) on desktop and mobile widths.
 - Hungarian message catalogue (`messages.hu.yaml`) for command responses, help, validation rules, the admin dashboard and the public theme; texts missing from a catalogue are shown in English.
+- Command log: every batch that changes the website is appended to `var/log/commands.log` (time, user, changed files, the batch itself); the `log [--last=N]` command shows the latest ones.
+- `undo` takes back the most recent change; the last 50 changes can be undone one by one. It refuses to overwrite files changed afterwards unless `--force` is given, and must be the only command in its batch.
+- Starter websites in English and Hungarian (`app/starter/`): home, about and contact pages, a menu and a footer.
+- First-time setup in the browser: while there is no admin user, `/admin` shows a setup form that creates the website from a starter and the first admin user.
+- `bin/campanella --init` (with `--starter`, `--site-name`, `--base-url`) sets up an installation on the command line; `--version` shows the version.
+- Root `.htaccess` for hosting where the document root cannot be set to `public/`.
+- The public website answers `503` with a hint to `/admin` until it has been set up.
+- Release workflow that builds an installable zip package with the dependencies on every version tag, and a manually run workflow that creates `composer.lock`.
+- Installation guide: `docs/installation.md`.
 
 ### Security
 
@@ -61,3 +74,8 @@ Added, Changed, Deprecated, Removed, Fixed, Security.
 - Admin passwords are stored as `password_hash` hashes (at least 10 characters); failed logins are throttled per address (5 per 15 minutes) and logged to `var/log/auth.log`.
 - Admin sessions: dedicated `HttpOnly`, `SameSite=Strict` cookie limited to `/admin` (`Secure` on HTTPS), new session id at login, 30-minute idle timeout and 12-hour maximum.
 - CSRF tokens on every state-changing admin request; strict Content Security Policy, no framing, `no-store` caching for the admin.
+- The web setup needs a random setup key that can only be read on the server (`config/setup-key.txt`, mode 0600); wrong keys are throttled and logged, and the key is deleted after the setup.
+- The setup puts `Require all denied` `.htaccess` files into `config/`, `project/` and `var/`.
+
+[Unreleased]: https://github.com/szhajagos/campanella-LITE/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/szhajagos/campanella-LITE/releases/tag/v0.1.0

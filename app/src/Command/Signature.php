@@ -17,6 +17,7 @@ final class Signature
      * @param array<string, bool>   $options   option name => whether it takes a value
      * @param list<string>          $examples  example command lines
      * @param bool                  $readOnly  true if the command never changes the project
+     * @param bool                  $standalone true if the command must be the only one in its batch
      */
     public function __construct(
         public readonly string $name,
@@ -25,6 +26,7 @@ final class Signature
         public readonly TextInput $text = TextInput::None,
         public readonly array $examples = [],
         public readonly bool $readOnly = false,
+        public readonly bool $standalone = false,
     ) {
     }
 

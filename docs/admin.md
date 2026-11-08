@@ -4,13 +4,15 @@ The admin dashboard at `/admin` is where the website is managed: a command box, 
 
 ## First user
 
-Admin users are created on the server with the CLI; the password is read from standard input and must be at least 10 characters long:
+While there is no admin user, `/admin` shows the first-time setup form instead of the login form: setup key (from `config/setup-key.txt` on the server), website name, starter content and the first admin user. See [installation.md](installation.md#3-set-it-up).
+
+On the server, users can also be created with the CLI; the password is read from standard input and must be at least 10 characters long:
 
 ```
 bin/campanella --add-user=admin
 ```
 
-Running it again for an existing user sets a new password. Users are stored in `config/users.yaml` with hashed passwords (PHP's `password_hash`), outside the web root and outside the project. A web-based first-time setup is part of the installer (milestone 6).
+Running it again for an existing user sets a new password. Users are stored in `config/users.yaml` with hashed passwords (PHP's `password_hash`), outside the web root and outside the project.
 
 ## Using the dashboard
 

@@ -29,11 +29,23 @@ jobs:
           coverage: none
           tools: composer:v2
 
+      # With a committed composer.lock, CI installs exactly the locked versions
+      # and checks that the lock file matches composer.json.
       - name: Validate composer.json
-        run: composer validate --strict --no-check-lock
+        run: |
+          if [ -f composer.lock ]; then
+            composer validate --strict
+          else
+            composer validate --strict --no-check-lock
+          fi
 
       - name: Install dependencies
-        run: composer update --prefer-dist --no-progress --no-interaction
+        run: |
+          if [ -f composer.lock ]; then
+            composer install --prefer-dist --no-progress --no-interaction
+          else
+            composer update --prefer-dist --no-progress --no-interaction
+          fi
 
       - name: Check PHP syntax
         run: find app/src tests -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null

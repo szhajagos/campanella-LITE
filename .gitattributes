@@ -8,3 +8,12 @@
 *.ico binary
 *.woff binary
 *.woff2 binary
+
+# Development files, left out of the release package (git archive)
+/.github export-ignore
+/tests export-ignore
+/.editorconfig export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/phpunit.xml.dist export-ignore
+/phpstan.neon.dist export-ignore

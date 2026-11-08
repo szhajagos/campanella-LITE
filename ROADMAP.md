@@ -43,6 +43,11 @@ Status: **Accepted** = agreed and binding; **Proposed** = current plan, open to 
 | 2026-11-08 | Admin | The dashboard is server-rendered (Twig) with a small framework-free script; commands run through the same interpreter and JSON endpoint the AI module will use. | Accepted |
 | 2026-11-08 | Admin | History recall uses Alt+↑/↓, because plain arrow keys move the cursor in the multi-line command box. | Accepted |
 | 2026-11-08 | Languages | Hungarian is the first translation of the messages. Any text missing from a catalogue is shown in English, key by key. Catalogues must use the English keys and placeholders (checked by tests). | Accepted |
+| 2026-11-08 | Undo | `undo` restores the files kept before the last applied batch (`var/undo/`, 50 batches). It is a batch of its own, and it refuses when a file has changed since, unless `--force` is given. There is no redo in 0.1.0. | Accepted |
+| 2026-11-08 | Log | Every batch that changes the website is logged as one JSON line in `var/log/commands.log`, including the batch itself; the file is rotated at 2 MB. | Accepted |
+| 2026-11-08 | Installer | The web setup runs on `/admin` while there is no admin user and needs a setup key from `config/setup-key.txt`. The command line offers the same with `--init`. Starters exist in English and Hungarian. | Accepted |
+| 2026-11-08 | Hosting | Where the document root cannot be `public/`, a root `.htaccess` passes every request to `public/` and refuses everything without `mod_rewrite`. | Accepted |
+| 2026-11-08 | Releases | A version tag (`v0.1.0`) builds a zip with the production dependencies; `composer.lock` is created by a manually run workflow and committed, because the maintainer works without local PHP. | Accepted |
 | 2026-11-07 | URLs | When an alias changes, the old alias redirects (301) to the page's current alias, until another page takes the old alias. Redirects point to page ids, so renaming twice never creates a chain. | Accepted |
 
 ## MVP (0.1.0)
@@ -54,7 +59,7 @@ Built from the inside out: storage and command interpreter first, user interface
 - [x] **M3 – Entity commands:** `page`, `content`, `layout`, `menu` and `language` commands and `check`.
 - [x] **M4 – Generator:** default Bootstrap 5 theme in Twig, front controller, `.htaccess`, cache manifest, alias redirects, `build`, `cache clear`.
 - [x] **M5 – Admin dashboard:** login, command box, response box, command history, status bar.
-- [ ] **M6 – Finishing:** command log, `undo`, installer, starter project with example pages, command language reference, committed `composer.lock`.
+- [x] **M6 – Finishing:** command log, `undo`, installer, starter project with example pages, command language reference, `composer.lock` and release workflows.
 
 ## After the MVP
 
@@ -69,7 +74,8 @@ Not yet scheduled; order to be decided.
 - **More web servers:** Nginx configuration.
 - **Themes:** exchangeable theme directories.
 - **Smarter cache invalidation:** remove only the pages affected by a change.
-- **Hosting without a configurable document root:** an installer option that protects `app/`, `project/` and `var/` when the web root cannot be set to `public/`.
+- **Installing into a subdirectory** of a domain (`example.com/site/`).
+- **Redo** after `undo`.
 - **Browser tests** with Playwright (login, running commands, the public pages) in CI; the same setup can produce the screenshots of the user guide.
 - **User guide** in `docs/guide/`.
 

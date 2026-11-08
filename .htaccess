@@ -1,0 +1,18 @@
+# Campanella Lite – only for hosting where the document root cannot be set
+# to public/. Every request is then passed on to public/, so nothing outside
+# it (app/, config/, project/, var/ ...) can ever be downloaded.
+# Where the document root is public/, this file is not used.
+
+Options -Indexes -MultiViews
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Without mod_rewrite, refuse everything rather than expose the files.
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>

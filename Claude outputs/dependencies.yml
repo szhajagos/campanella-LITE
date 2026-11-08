@@ -1,0 +1,54 @@
+# Creates an up-to-date composer.lock and offers it for download.
+#
+# Run it by hand: Actions → "Update dependencies" → Run workflow. When it is
+# done, download the "composer-lock" artifact from the run's summary page,
+# copy composer.lock into the repository root, and commit it.
+# Nothing is committed by this workflow.
+
+name: Update dependencies
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lock:
+    name: Resolve and test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v5
+
+      # The lowest supported PHP version; composer.json also pins the
+      # platform to PHP 8.3, so the locked versions work on 8.3 and later.
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          tools: composer:v2
+
+      - name: Resolve the dependencies
+        run: composer update --prefer-dist --no-progress --no-interaction
+
+      - name: Validate composer.json and composer.lock
+        run: composer validate --strict
+
+      - name: Static analysis (PHPStan)
+        run: composer analyse -- --no-progress
+
+      - name: Tests (PHPUnit)
+        run: composer test
+
+      - name: List the locked versions
+        run: composer show --locked --no-dev --format=text | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload composer.lock
+        uses: actions/upload-artifact@v4
+        with:
+          name: composer-lock
+          path: composer.lock
+          retention-days: 14

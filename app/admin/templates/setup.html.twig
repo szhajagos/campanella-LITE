@@ -1,0 +1,81 @@
+{% extends 'layout.html.twig' %}
+
+{% block title %}{{ t('setup.title') }} – Campanella Lite{% endblock %}
+
+{% block body %}
+<main class="setup container">
+    <div class="card shadow-sm">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <h1 class="h4 mb-0">{{ t('setup.title') }}</h1>
+                <nav class="small" aria-label="{{ t('setup.language') }}">
+                    {% for code in locales %}
+                        {% if code == locale %}<strong>{{ code|upper }}</strong>{% else %}<a href="/admin?lang={{ code }}" hreflang="{{ code }}">{{ code|upper }}</a>{% endif %}{% if not loop.last %} · {% endif %}
+                    {% endfor %}
+                </nav>
+            </div>
+            <p class="text-body-secondary">{{ t('setup.intro') }}</p>
+
+            {% if fatal %}
+            <div class="alert alert-danger" role="alert">{{ fatal }}</div>
+            {% else %}
+            {% if error %}
+            <div class="alert alert-danger" role="alert">{{ error }}</div>
+            {% endif %}
+            <form method="post" action="/admin/setup" novalidate>
+                <input type="hidden" name="_csrf" value="{{ csrf }}">
+                <input type="hidden" name="locale" value="{{ locale }}">
+
+                <fieldset class="mb-4">
+                    <legend class="h6">{{ t('setup.key_legend') }}</legend>
+                    <label class="form-label" for="setup_key">{{ t('setup.key', {file: key_location}) }}</label>
+                    <input class="form-control font-monospace" id="setup_key" name="setup_key" autocomplete="off" spellcheck="false" required autofocus>
+                    <div class="form-text">{{ t('setup.key_help') }}</div>
+                </fieldset>
+
+                {% if not has_project %}
+                <fieldset class="mb-4">
+                    <legend class="h6">{{ t('setup.site_legend') }}</legend>
+                    <div class="mb-3">
+                        <label class="form-label" for="site_name">{{ t('setup.site_name') }}</label>
+                        <input class="form-control" id="site_name" name="site_name" value="{{ values.site_name }}" maxlength="100" required>
+                    </div>
+                    <div>
+                        <label class="form-label" for="starter">{{ t('setup.starter') }}</label>
+                        <select class="form-select" id="starter" name="starter">
+                            {% for code in starters %}
+                            <option value="{{ code }}"{% if code == values.starter %} selected{% endif %}>{{ t('setup.starter_' ~ code) }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">{{ t('setup.starter_help') }}</div>
+                    </div>
+                </fieldset>
+                {% else %}
+                <div class="alert alert-info">{{ t('setup.project_exists') }}</div>
+                {% endif %}
+
+                <fieldset class="mb-4">
+                    <legend class="h6">{{ t('setup.user_legend') }}</legend>
+                    <div class="mb-3">
+                        <label class="form-label" for="username">{{ t('login.username') }}</label>
+                        <input class="form-control" id="username" name="username" value="{{ values.username }}" autocomplete="username" required>
+                        <div class="form-text">{{ t('setup.username_help') }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="password">{{ t('login.password') }}</label>
+                        <input class="form-control" id="password" name="password" type="password" autocomplete="new-password" minlength="10" required>
+                        <div class="form-text">{{ t('setup.password_help') }}</div>
+                    </div>
+                    <div>
+                        <label class="form-label" for="password_repeat">{{ t('setup.password_repeat') }}</label>
+                        <input class="form-control" id="password_repeat" name="password_repeat" type="password" autocomplete="new-password" required>
+                    </div>
+                </fieldset>
+
+                <button class="btn btn-primary w-100" type="submit">{{ t('setup.submit') }}</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</main>
+{% endblock %}

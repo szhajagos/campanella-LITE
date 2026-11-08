@@ -1,0 +1,12 @@
+id: 2
+alias:
+  hu: /rolunk
+title:
+  hu: Rólunk
+description:
+  hu: 'Kik vagyunk, és mivel foglalkozunk.'
+layout: default
+status: published
+placements:
+  body.main:
+    - about-text

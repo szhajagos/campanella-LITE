@@ -1,0 +1,9 @@
+id: 1
+title:
+  en: Home
+layout: default
+status: published
+placements:
+  body.main:
+    - welcome
+    - getting-started

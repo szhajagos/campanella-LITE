@@ -14,6 +14,8 @@ use Campanella\Lite\Http\Request;
 use Campanella\Lite\Http\Response;
 use Campanella\Lite\I18n\Message;
 use Campanella\Lite\I18n\Translator;
+use Campanella\Lite\Install\InstallError;
+use Campanella\Lite\Install\Installer;
 use Campanella\Lite\Model\PageStatus;
 use Campanella\Lite\Model\Project;
 use Campanella\Lite\Routing\Urls;
@@ -32,6 +34,9 @@ use Twig\TwigFunction;
  *     POST /admin/logout             log out (form, CSRF token)
  *     POST /admin/run                run a command batch (JSON, X-CSRF-Token header)
  *     GET  /admin/preview/{id}[/{language}]  show any page, drafts included
+ *
+ * While there is no admin user, /admin shows the first-time setup instead
+ * (POST /admin/setup), protected by the setup key in config/setup-key.txt.
  *
  * Every state-changing request needs the session's CSRF token. Sessions end
  * after IDLE_TIMEOUT seconds without activity and after MAX_LIFETIME seconds
@@ -68,6 +73,7 @@ final class AdminController
         private readonly LoginThrottle $throttle,
         private readonly AuthLog $log,
         private readonly History $history,
+        private readonly Installer $installer,
         private readonly Environment $twig,
         ?Closure $clock = null,
     ) {
@@ -82,6 +88,16 @@ final class AdminController
     {
         $path = preg_replace('#/index\.php$#', '', rtrim($request->path, '/')) ?? '';
         $path = $path === '' ? '/admin' : $path;
+
+        if (!$this->users->exists()) {
+            $response = match (true) {
+                $path === '/admin' && in_array($request->method, ['GET', 'HEAD'], true) => $this->setupPage($request, null, 200),
+                $path === '/admin/setup' && $request->method === 'POST' => $this->setup($request),
+                default => Response::seeOther('/admin'),
+            };
+
+            return $response->withHeaders(self::SECURITY_HEADERS);
+        }
 
         $response = match (true) {
             $path === '/admin' && in_array($request->method, ['GET', 'HEAD'], true) => $this->home(),
@@ -204,6 +220,129 @@ final class AdminController
         ]);
     }
 
+    /**
+     * The first-time setup form: setup key, starter project, first admin user.
+     *
+     * @param array<string, string> $values the submitted values to show again
+     */
+    private function setupPage(Request $request, ?string $error, int $status, array $values = []): Response
+    {
+        $this->locale = $this->setupLocale($request);
+        $fatal = null;
+
+        try {
+            $this->installer->setupKey();
+        } catch (InstallError $failure) {
+            $fatal = $this->translateMessage($failure->reason);
+        }
+
+        return Response::html($this->twig->render('setup.html.twig', [
+            'csrf' => $this->csrfToken(),
+            'locale' => $this->locale,
+            'locales' => $this->app->translator()->locales(),
+            'error' => $error,
+            'fatal' => $fatal,
+            'key_location' => $this->installer->setupKeyLocation(),
+            'has_project' => $this->installer->hasProject(),
+            'starters' => Installer::STARTERS,
+            'values' => $values + [
+                'starter' => in_array($this->locale, Installer::STARTERS, true) ? $this->locale : Installer::STARTERS[0],
+                'site_name' => '',
+                'username' => 'admin',
+            ],
+        ]), $status);
+    }
+
+    private function setup(Request $request): Response
+    {
+        $this->locale = $this->setupLocale($request);
+        $now = ($this->clock)();
+        $address = $request->clientAddress;
+        $values = [
+            'starter' => (string) ($request->form['starter'] ?? ''),
+            'site_name' => trim((string) ($request->form['site_name'] ?? '')),
+            'username' => trim((string) ($request->form['username'] ?? '')),
+        ];
+        /** @param array<string, string|int> $params */
+        $fail = fn (string $key, array $params = [], int $status = 422): Response => $this->setupPage(
+            $request,
+            $this->translate($key, $params),
+            $status,
+            $values,
+        );
+
+        if (!$this->validCsrf($request)) {
+            return $fail('admin.login.session_expired', [], 400);
+        }
+
+        $retryAfter = $this->throttle->retryAfter($address, $now);
+
+        if ($retryAfter > 0) {
+            $this->log->record('setup_blocked', $values['username'], $address, $now);
+
+            return $fail('admin.login.too_many_attempts', ['minutes' => (int) ceil($retryAfter / 60)], 429)
+                ->withHeaders(['Retry-After' => (string) $retryAfter]);
+        }
+
+        if (!$this->installer->checkSetupKey((string) ($request->form['setup_key'] ?? ''))) {
+            $this->throttle->recordFailure($address, $now);
+            $this->log->record('setup_failed', $values['username'], $address, $now);
+
+            return $fail('admin.setup.wrong_key', ['file' => $this->installer->setupKeyLocation()], 403);
+        }
+
+        $password = (string) ($request->form['password'] ?? '');
+
+        if (!hash_equals($password, (string) ($request->form['password_repeat'] ?? ''))) {
+            return $fail('admin.setup.passwords_differ');
+        }
+
+        $locale = $this->setupLocale($request);
+
+        try {
+            if (!$this->installer->hasProject()) {
+                $host = $request->header('host') ?? '';
+                $baseUrl = preg_match('/^[A-Za-z0-9.-]+(?::[0-9]{1,5})?$/', $host) === 1 ? ($request->secure ? 'https://' : 'http://') . $host : '';
+                // Validate the user before copying the starter, so a typo does not leave a half-done setup behind.
+                $this->installer->validateUser($values['username'], $password);
+                $this->installer->createProject($values['starter'], $values['site_name'], $baseUrl);
+            }
+
+            $user = $this->installer->createUser($values['username'], $password, $locale);
+        } catch (InstallError $failure) {
+            return $this->setupPage($request, $this->translateMessage($failure->reason), 422, $values);
+        }
+
+        $this->throttle->reset($address, $now);
+        $this->session->regenerate();
+        $this->session->set('user', $user->name);
+        $this->session->set('login_at', $now);
+        $this->session->set('seen_at', $now);
+        $this->session->set('csrf', bin2hex(random_bytes(32)));
+        $this->log->record('setup_ok', $user->name, $address, $now);
+
+        return Response::seeOther('/admin');
+    }
+
+    /** The language of the setup page: ?lang=, the form, the browser, or English. */
+    private function setupLocale(Request $request): string
+    {
+        $locales = $this->app->translator()->locales();
+        $candidates = [(string) ($request->query['lang'] ?? ''), (string) ($request->form['locale'] ?? '')];
+
+        foreach (explode(',', $request->header('accept-language') ?? '') as $part) {
+            $candidates[] = strtolower(substr(trim(explode(';', $part)[0]), 0, 2));
+        }
+
+        foreach ($candidates as $candidate) {
+            if (in_array($candidate, $locales, true)) {
+                return $candidate;
+            }
+        }
+
+        return Translator::FALLBACK_LOCALE;
+    }
+
     private function preview(string $path): Response
     {
         if ($this->currentUser() === null) {
@@ -288,7 +427,6 @@ final class AdminController
             'csrf' => $this->csrfToken(),
             'locale' => $this->locale,
             'error' => $error === null ? null : $this->translate('admin.login.' . $error, $params),
-            'no_users' => !$this->users->exists(),
         ]), $status);
     }
 

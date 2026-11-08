@@ -77,10 +77,11 @@ final class Site
         ?array $languages = null,
         ?string $defaultLanguage = null,
         ?string $defaultLayout = null,
+        ?string $baseUrl = null,
     ): self {
         return new self(
             $name ?? $this->name,
-            $this->baseUrl,
+            $baseUrl ?? $this->baseUrl,
             $languages ?? $this->languages,
             $defaultLanguage ?? $this->defaultLanguage,
             $defaultLayout ?? $this->defaultLayout,

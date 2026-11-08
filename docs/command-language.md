@@ -278,6 +278,20 @@ language default hu
 
 `build` and `cache clear` run after the batch has been written, so they see its changes; they do nothing on a dry run or in a rejected batch. Every batch that changes the website clears the generated pages by itself. Changing or removing an alias records a redirect from the old address automatically. See [generator.md](generator.md).
 
+## History
+
+| Command | Description |
+| --- | --- |
+| `undo [--force]` | Takes back the most recent change. The last 50 changes can be undone one by one. Must be the only command in its batch. |
+| `log [--last=<n>]` | Shows the latest batches that changed the website, newest first (10 by default, at most 200). |
+
+Every applied batch is kept for `undo` and written to the command log. `undo` restores the files exactly as they were before that batch, redirects and the page cache included, and is itself logged ("undid …"). If a file has been changed since, by a later batch that was undone with it or by hand, `undo` refuses and names the files; `--force` restores them anyway. With `@dry-run`, `undo` only shows which batch and how many files it would restore. Batches that change nothing, dry runs and rejected batches are neither logged nor undoable.
+
+```
+@dry-run
+undo
+```
+
 ## Your settings
 
 | Command | Description |
@@ -298,6 +312,8 @@ Responses use these key families; the full list with texts is in `app/translatio
 | `batch.*` | Batch summaries |
 | `violation.*` | Validation rules; see [data-model.md](data-model.md#violation-codes) |
 | `help.*` | Command descriptions |
+| `undo.*`, `log.*` | Undo and the command log |
+| `install.*` | Installer errors (web setup and `--init`) |
 
 ## Developer CLI
 
@@ -308,4 +324,11 @@ bin/campanella -e "get site.name"
 bin/campanella batch.txt
 bin/campanella --dry-run --json < batch.txt
 bin/campanella --root=/path/to/installation --locale=en -e "list pages"
+```
+
+It also sets up a new installation (see [installation.md](installation.md)):
+
+```
+bin/campanella --init --starter=hu --site-name="Saját oldal" --add-user=admin
+bin/campanella --version
 ```

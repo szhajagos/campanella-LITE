@@ -42,12 +42,17 @@ use Campanella\Lite\Command\Handler\Page\PagePlacementCommand;
 use Campanella\Lite\Command\Handler\Page\PageStatusCommand;
 use Campanella\Lite\Command\Handler\RedirectRemoveCommand;
 use Campanella\Lite\Command\Handler\SetCommand;
+use Campanella\Lite\Command\Handler\LogCommand;
+use Campanella\Lite\Command\Handler\UndoCommand;
 use Campanella\Lite\Command\Handler\UserLocaleCommand;
 use Campanella\Lite\Command\Interpreter;
+use Campanella\Lite\Command\Log\CommandLog;
 use Campanella\Lite\Http\FrontController;
 use Campanella\Lite\I18n\Translator;
+use Campanella\Lite\Install\Installer;
 use Campanella\Lite\Project\EntityRef;
 use Campanella\Lite\Project\ProjectRepository;
+use Campanella\Lite\Project\UndoHistory;
 use Campanella\Lite\Render\PageCache;
 use Campanella\Lite\Render\PageRenderer;
 use Campanella\Lite\Render\SiteBuilder;
@@ -65,6 +70,9 @@ use Twig\Loader\FilesystemLoader;
  */
 final class Application
 {
+    /** The released version; the release workflow checks it against the tag. */
+    public const VERSION = '0.1.0';
+
     private ?CommandRegistry $registry = null;
     private ?Translator $translator = null;
     private ?PageRenderer $renderer = null;
@@ -86,7 +94,21 @@ final class Application
                 /** @var list<EntityRef> $changes */
                 $cache->clear();
             },
+            undo: $this->undoHistory(),
+            log: $this->commandLog(),
         );
+    }
+
+    /** Snapshots of the project files before each applied batch, for "undo". */
+    public function undoHistory(): UndoHistory
+    {
+        return new UndoHistory(new FileStore($this->paths->project()), new FileStore($this->paths->var()));
+    }
+
+    /** Every batch that changed the project, for "log". */
+    public function commandLog(): CommandLog
+    {
+        return new CommandLog($this->paths->var() . '/log/commands.log');
     }
 
     public function frontController(): FrontController
@@ -108,6 +130,7 @@ final class Application
             new LoginThrottle($var),
             new AuthLog($this->paths->var() . '/log/auth.log'),
             new History($var),
+            $this->installer(),
             new Environment(new FilesystemLoader(dirname(__DIR__) . '/admin/templates'), [
                 'autoescape' => 'html',
                 'strict_variables' => true,
@@ -116,6 +139,11 @@ final class Application
             ]),
             $clock,
         );
+    }
+
+    public function installer(): Installer
+    {
+        return new Installer($this->paths);
     }
 
     public function users(): UserRepository
@@ -159,6 +187,8 @@ final class Application
                 new BuildCommand($this->siteBuilder()),
                 new CacheClearCommand($this->pageCache()),
                 new RedirectRemoveCommand(),
+                new UndoCommand(),
+                new LogCommand($this->commandLog()),
                 new UserLocaleCommand($this->users(), $this->translator()),
                 new PageCreateCommand(),
                 new PageDeleteCommand(),

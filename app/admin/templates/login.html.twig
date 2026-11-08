@@ -7,9 +7,6 @@
     <div class="card shadow-sm">
         <div class="card-body p-4">
             <h1 class="h4 mb-4">Campanella Lite</h1>
-            {% if no_users %}
-            <div class="alert alert-warning">{{ t('login.no_users') }}<br><code>bin/campanella --add-user=admin</code></div>
-            {% endif %}
             {% if error %}
             <div class="alert alert-danger" role="alert">{{ error }}</div>
             {% endif %}

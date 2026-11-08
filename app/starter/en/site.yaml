@@ -1,0 +1,9 @@
+name: 'My website'
+base_url: 'https://example.com'
+languages:
+  - en
+default_language: en
+default_layout: default
+theme: default
+next_page_id: 4
+front_page: 1

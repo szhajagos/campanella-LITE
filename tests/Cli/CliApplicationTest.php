@@ -94,6 +94,60 @@ final class CliApplicationTest extends TestCase
         self::assertStringContainsString('Usage: campanella', $out);
     }
 
+    public function testInitSetsUpANewInstallationWithAUser(): void
+    {
+        $this->root = $this->temporaryDirectory() . '/fresh';
+        mkdir($this->root);
+
+        [$code, $out, $err] = $this->cli(['--init', '--starter=hu', '--site-name=Saját oldal', '--base-url=https://example.org/', '--add-user=admin'], "correct horse battery\n");
+
+        self::assertSame(CliApplication::EXIT_OK, $code, $err);
+        self::assertStringContainsString('from the "hu" starter', $out);
+        self::assertStringContainsString('Created the admin user "admin"', $out);
+        self::assertStringContainsString("name: 'Saját oldal'", (string) file_get_contents($this->root . '/project/site.yaml'));
+        self::assertStringContainsString('base_url: \'https://example.org\'', (string) file_get_contents($this->root . '/project/site.yaml'));
+        self::assertFileExists($this->root . '/config/users.yaml');
+        self::assertFileExists($this->root . '/var/.htaccess');
+    }
+
+    public function testInitLeavesAnExistingProjectAlone(): void
+    {
+        [$code, $out] = $this->cli(['--init', '--starter=hu']);
+
+        self::assertSame(CliApplication::EXIT_OK, $code);
+        self::assertStringContainsString('it was left as it is', $out);
+        self::assertStringContainsString('Next, create an admin user', $out);
+        self::assertStringContainsString('Example Ltd.', (string) file_get_contents($this->root . '/project/site.yaml'));
+    }
+
+    public function testInitReportsBadInputInTheChosenLanguage(): void
+    {
+        $this->root = $this->temporaryDirectory() . '/fresh';
+        mkdir($this->root);
+
+        [$code, , $err] = $this->cli(['--init', '--starter=de', '--locale=hu']);
+
+        self::assertSame(CliApplication::EXIT_USAGE, $code);
+        self::assertStringContainsString('Ismeretlen kezdő tartalom', $err);
+        self::assertDirectoryDoesNotExist($this->root . '/project');
+    }
+
+    public function testShowsTheVersion(): void
+    {
+        [$code, $out] = $this->cli(['--version']);
+
+        self::assertSame(CliApplication::EXIT_OK, $code);
+        self::assertSame('Campanella Lite ' . \Campanella\Lite\Application::VERSION . "\n", $out);
+    }
+
+    public function testInitOptionsNeedInit(): void
+    {
+        [$code, , $err] = $this->cli(['--starter=hu', '-e', 'list pages']);
+
+        self::assertSame(CliApplication::EXIT_USAGE, $code);
+        self::assertStringContainsString('go with --init', $err);
+    }
+
     /**
      * @param list<string> $args
      *

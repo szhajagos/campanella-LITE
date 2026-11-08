@@ -4,7 +4,7 @@
 
 Campanella Lite is managed through a small, documented command language instead of forms and a database. Every change, whether typed by an administrator or (later) proposed by an AI agent, goes through the same command interpreter, which validates it, applies it atomically and logs it. Visitors get plain static HTML.
 
-> **Status: pre-alpha.** Milestones 1–5 are done: storage, data model, validation, the command interpreter, the commands that build a website, the generator that publishes it, and the admin dashboard. The installer and the first release come next. The concepts below describe the planned MVP and may still change. See [ROADMAP.md](ROADMAP.md) for decisions and progress.
+> **Status: 0.1.0, the first release (alpha).** The MVP is complete: the command language and its interpreter, the public website generator, the admin dashboard, undo, the command log and the installer. It is ready to try, but expect changes before 1.0. See [ROADMAP.md](ROADMAP.md) for decisions and plans.
 
 ---
 
@@ -136,28 +136,39 @@ placements:
 
 ## Requirements
 
-Planned minimum requirements for the MVP:
-
 - PHP 8.3 or newer with the `mbstring` extension
-- Composer
 - Apache with `mod_rewrite` (other web servers are planned for later)
-- Write permission for the `project/`, `var/` and `public/` directories
+- Write permission for the `config/`, `project/`, `var/` and `public/` directories
+- Composer only when installing from the source code; the release package contains the dependencies
 
 No database and no AI model are required.
 
 ## Installation
 
-Not available yet. Installation instructions will be added with the first release.
+1. Download `campanella-lite-<version>.zip` from the [releases page](https://github.com/szhajagos/campanella-LITE/releases) and upload its contents to the server.
+2. Set the document root of the domain to the `public/` directory. Where that is not possible, the `.htaccess` file in the installation root passes every request on to `public/`.
+3. Open `/admin` in the browser. The setup form asks for the setup key from `config/setup-key.txt` on the server, the name of the website, English or Hungarian starter pages, and the first admin user.
+
+With SSH access the setup also works on the command line:
+
+```
+bin/campanella --init --starter=en --site-name="My website"
+bin/campanella --add-user=admin
+```
+
+Details, Apache configuration, permissions and updating: [docs/installation.md](docs/installation.md).
 
 ## Directory structure
 
-Planned layout of an installation:
+Layout of an installation:
 
 ```
 campanella-lite/
-├── app/          # PHP source code, translations, Composer dependencies
+├── app/          # PHP source code, themes, translations, starter websites, Composer dependencies
+├── bin/          # the command-line tool
+├── config/       # admin users (created by the setup)
 ├── project/      # the website description: YAML and Markdown files
-├── var/          # logs, locks, undo snapshots
+├── var/          # logs, locks, undo snapshots, caches
 └── public/       # web root: front controller, admin entry, assets, generated HTML
 ```
 
@@ -167,7 +178,7 @@ Only `public/` should be exposed by the web server.
 
 - [ROADMAP.md](ROADMAP.md): decisions made so far and planned work
 - [CHANGELOG.md](CHANGELOG.md): changes in each release
-- [docs/](docs/): developer documentation (grows with the code), including the [architecture](docs/architecture.md), the [data model](docs/data-model.md), the [command language](docs/command-language.md), the [public website](docs/generator.md), the [admin dashboard](docs/admin.md), [security](docs/security.md) and the [development guide](docs/development.md)
+- [docs/](docs/): developer documentation (grows with the code), including [installation](docs/installation.md), the [architecture](docs/architecture.md), the [data model](docs/data-model.md), the [command language](docs/command-language.md), the [public website](docs/generator.md), the [admin dashboard](docs/admin.md), [security](docs/security.md) and the [development guide](docs/development.md)
 
 A user guide will be added once there is something to guide through.
 

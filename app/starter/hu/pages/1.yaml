@@ -1,0 +1,9 @@
+id: 1
+title:
+  hu: Kezdőlap
+layout: default
+status: published
+placements:
+  body.main:
+    - welcome
+    - getting-started

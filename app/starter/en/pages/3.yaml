@@ -1,0 +1,12 @@
+id: 3
+alias:
+  en: /contact
+title:
+  en: Contact
+description:
+  en: 'How to reach us.'
+layout: default
+status: published
+placements:
+  body.main:
+    - contact-text

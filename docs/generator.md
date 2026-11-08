@@ -113,7 +113,7 @@ public/assets/vendor/bootstrap/   Bootstrap 5.3.8 CSS and JS bundle (MIT)
 - sends everything else to `index.php`;
 - refuses hidden files and turns off directory listings.
 
-The web server's document root must be the `public/` directory. Hosting where that is not possible will be handled by the installer (milestone 6).
+The web server's document root should be the `public/` directory. Where that is not possible, the `.htaccess` file in the installation root passes every request on to `public/`. See [installation.md](installation.md#2-point-the-web-server-at-public).
 
 ### Development server
 

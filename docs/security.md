@@ -26,7 +26,8 @@ The most important rule of Campanella Lite: **the command language changes data,
 | Session lifetime | A new session id after login (against session fixation); sessions end after 30 minutes without activity and after 12 hours in any case. |
 | CSRF | Every state-changing request (login, logout, running commands) needs the session's random token, compared in constant time. Commands are sent as JSON with an `X-CSRF-Token` header. |
 | Headers | `Content-Security-Policy` allowing only same-origin resources and no inline scripts, `X-Frame-Options: DENY`, `frame-ancestors 'none'`, `Referrer-Policy: same-origin`, `Cache-Control: no-store`, `X-Robots-Tag: noindex`. |
-| Logging | Logins, failed and blocked logins and logouts go to `var/log/auth.log` with time, user name and address. |
+| Logging | Logins, failed and blocked logins, logouts and setup attempts go to `var/log/auth.log` with time, user name and address. |
+| First-time setup | Only possible while there is no admin user, and only with the setup key: 24 random hexadecimal characters in `config/setup-key.txt` (mode 0600), readable only by someone with access to the server's files. Compared in constant time, throttled like logins, deleted after the setup. |
 
 ## Files and commands
 
@@ -37,9 +38,11 @@ The most important rule of Campanella Lite: **the command language changes data,
 | Locking | One exclusive lock serialises every write to the project and to the page cache. |
 | YAML | Only plain data is accepted: PHP objects, constants and custom tags are refused. |
 | All-or-nothing batches | A batch is validated as a whole before anything is written. |
+| Command log | Every change is logged in `var/log/commands.log` with time, user, files and the batch itself. |
+| Undo | The last 50 changes can be taken back; `undo` never overwrites a file changed afterwards without `--force`. |
+| Directories | The installer puts a `Require all denied` `.htaccess` into `config/`, `project/` and `var/`; a root `.htaccess` keeps everything outside `public/` unreachable where the document root cannot be `public/`. |
 
 ## Planned
 
-- Command log and undo snapshots (milestone 6).
 - Multiple users with restricted, role-based command permissions.
 - The AI module will submit commands through the same interpreter, with human approval.

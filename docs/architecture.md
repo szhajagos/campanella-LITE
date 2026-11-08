@@ -36,6 +36,9 @@ The rule that holds the design together: **the command interpreter is the only c
 | Renderer, theme, page cache, build | `Campanella\Lite\Render` | M4 | Done |
 | Front controller | `Campanella\Lite\Http` | M4 | Done |
 | Admin dashboard, users, login security | `Campanella\Lite\Admin` | M5 | Done |
+| Command log, `log` | `Campanella\Lite\Command\Log` | M6 | Done |
+| Undo snapshots, `undo` | `Campanella\Lite\Project\UndoHistory` | M6 | Done |
+| Installer, starters, web setup | `Campanella\Lite\Install` | M6 | Done |
 
 ## Layers built in M1
 
@@ -100,6 +103,16 @@ Commands that touch files outside the project (`build`, `cache clear`) return de
 ### Admin (M5)
 
 `Admin\AdminController` handles everything under `/admin` (login, logout, running batches, previews) on top of a small `Http\Request`/`Http\Response` pair and a `Session` interface, so it is tested without a web server. Users live in `config/users.yaml` (`Admin\UserRepository`); `LoginThrottle`, `AuthLog` and `History` keep their data in `var/`. The dashboard is server-rendered Twig with a small script (`public/assets/admin/admin.js`). The interpreter receives the logged-in user's name, for commands about the user's own settings. See [admin.md](admin.md) and [security.md](security.md).
+
+### Command log and undo (M6)
+
+- **`UndoHistory`** keeps one snapshot per applied batch in `var/undo/{id}.json`: the earlier contents of every file the batch changed (`null` for a file that did not exist) and a SHA-1 hash of each file as the batch left it. The interpreter captures the files just before it writes and records the snapshot right after, under the write lock. Only the latest 50 are kept.
+- **`undo`** is run by the interpreter itself instead of on the workspace: it checks that the files are still as the batch left them (otherwise it refuses, unless `--force`), restores them, deletes the snapshot and clears the page cache. Its signature is marked `standalone`, so a batch containing `undo` and anything else is rejected.
+- **`CommandLog`** appends one JSON line per applied batch or undo to `var/log/commands.log`; the batch id is shared with the undo snapshot. `log` reads the latest entries.
+
+### Installer (`Campanella\Lite\Install`)
+
+`Installer` creates `config/`, `var/` and `project/` (each with a `Require all denied` `.htaccess`), copies a starter from `app/starter/{language}/` and names the website, creates the first admin user, and manages the setup key. It is the only code besides the interpreter that writes to `project/`, and only into an empty one. `AdminController` shows the setup form while there is no admin user; the CLI offers `--init`.
 
 ### I18n (`Campanella\Lite\I18n`)
 

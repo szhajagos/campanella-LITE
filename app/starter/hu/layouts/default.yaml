@@ -1,0 +1,18 @@
+name: default
+title:
+  hu: Alapelrendezés
+regions:
+  - name: header
+    columns:
+      - { name: brand, width: 12, content: [site-title] }
+  - name: nav
+    container: fluid
+    columns:
+      - { name: menu, width: 12, menu: main }
+  - name: body
+    columns:
+      - { name: main, width: 8 }
+      - { name: sidebar, width: 4, content: [sidebar-help] }
+  - name: footer
+    columns:
+      - { name: footer, width: 12, content: [footer-text] }

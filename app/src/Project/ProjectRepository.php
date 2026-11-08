@@ -44,6 +44,12 @@ final class ProjectRepository
     {
     }
 
+    /** Whether there is a project at all (an installation that has not been set up has none). */
+    public function exists(): bool
+    {
+        return $this->store->exists(self::SITE_FILE);
+    }
+
     public function load(): Project
     {
         return new Project(

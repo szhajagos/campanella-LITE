@@ -7,6 +7,8 @@ namespace Campanella\Lite\Cli;
 use Campanella\Lite\Admin\User;
 use Campanella\Lite\Application;
 use Campanella\Lite\Command\Result\Outcome;
+use Campanella\Lite\Install\InstallError;
+use Campanella\Lite\Install\Installer;
 use Campanella\Lite\Paths;
 use InvalidArgumentException;
 use Throwable;
@@ -18,6 +20,10 @@ use Throwable;
  *     bin/campanella -e "get site.name"
  *     bin/campanella batch.txt
  *     cat batch.txt | bin/campanella --dry-run --json
+ *
+ * It also sets up a new installation:
+ *
+ *     bin/campanella --init --starter=hu --site-name="Saját oldal" --add-user=admin
  */
 final class CliApplication
 {
@@ -40,6 +46,12 @@ final class CliApplication
               --add-user=<name>     Create an admin user, or set a new password for an
                                     existing one. The password is read from standard
                                     input (at least 10 characters).
+              --init                Set up a new installation: create config/, var/ and
+                                    project/, and copy a starter website into project/
+              --starter=<language>  Starter website for --init: en or hu (default: en)
+              --site-name=<name>    Name of the website for --init
+              --base-url=<url>      Address of the website for --init, e.g. https://example.com
+          -V, --version             Show the version
           -h, --help                Show this help
 
         Exit codes: 0 success, 1 batch rejected or invalid, 2 usage or system error.
@@ -72,10 +84,24 @@ final class CliApplication
             return self::EXIT_USAGE;
         }
 
+        if ($arguments['version']) {
+            fwrite($this->stdout, 'Campanella Lite ' . Application::VERSION . "\n");
+
+            return self::EXIT_OK;
+        }
+
         if ($arguments['help']) {
             fwrite($this->stdout, self::USAGE);
 
             return self::EXIT_OK;
+        }
+
+        if ($arguments['init']) {
+            $status = $this->init($arguments);
+
+            if ($status !== self::EXIT_OK || $arguments['add-user'] === null) {
+                return $status;
+            }
         }
 
         if ($arguments['add-user'] !== null) {
@@ -115,7 +141,7 @@ final class CliApplication
     /**
      * @param list<string> $args
      *
-     * @return array{root: string, execute: ?string, file: ?string, dry-run: bool, json: bool, locale: string, help: bool, add-user: ?string}
+     * @return array{root: string, execute: ?string, file: ?string, dry-run: bool, json: bool, locale: string, help: bool, version: bool, add-user: ?string, init: bool, starter: ?string, site-name: ?string, base-url: string}
      */
     private function parseArguments(array $args): array
     {
@@ -127,16 +153,31 @@ final class CliApplication
             'json' => false,
             'locale' => 'en',
             'help' => false,
+            'version' => false,
             'add-user' => null,
+            'init' => false,
+            'starter' => null,
+            'site-name' => null,
+            'base-url' => '',
         ];
 
         for ($i = 0; $i < count($args); $i++) {
             $arg = $args[$i];
 
-            if ($arg === '-h' || $arg === '--help') {
+            if ($arg === '-V' || $arg === '--version') {
+                $result['version'] = true;
+            } elseif ($arg === '-h' || $arg === '--help') {
                 $result['help'] = true;
             } elseif ($arg === '--dry-run') {
                 $result['dry-run'] = true;
+            } elseif ($arg === '--init') {
+                $result['init'] = true;
+            } elseif (str_starts_with($arg, '--starter=')) {
+                $result['starter'] = substr($arg, strlen('--starter='));
+            } elseif (str_starts_with($arg, '--site-name=')) {
+                $result['site-name'] = substr($arg, strlen('--site-name='));
+            } elseif (str_starts_with($arg, '--base-url=')) {
+                $result['base-url'] = rtrim(substr($arg, strlen('--base-url=')), '/');
             } elseif ($arg === '--json') {
                 $result['json'] = true;
             } elseif ($arg === '-e') {
@@ -166,6 +207,14 @@ final class CliApplication
 
         if ($result['execute'] !== null && $result['file'] !== null) {
             throw new UsageError('Give either -e or a file, not both.');
+        }
+
+        if (!$result['init'] && ($result['starter'] !== null || $result['site-name'] !== null || $result['base-url'] !== '')) {
+            throw new UsageError('--starter, --site-name and --base-url go with --init.');
+        }
+
+        if ($result['init'] && ($result['execute'] !== null || $result['file'] !== null)) {
+            throw new UsageError('--init does not run commands; run them afterwards.');
         }
 
         return $result;
@@ -200,6 +249,40 @@ final class CliApplication
 
             return self::EXIT_OK;
         } catch (UsageError | InvalidArgumentException $error) {
+            fwrite($this->stderr, $error->getMessage() . "\n");
+
+            return self::EXIT_USAGE;
+        }
+    }
+
+    /**
+     * @param array{root: string, locale: string, starter: ?string, site-name: ?string, base-url: string, add-user: ?string} $arguments
+     */
+    private function init(array $arguments): int
+    {
+        try {
+            $application = new Application(new Paths($arguments['root']));
+            $installer = $application->installer();
+            $starter = $arguments['starter'] ?? Installer::STARTERS[0];
+
+            if ($installer->hasProject()) {
+                $installer->prepareDirectories();
+                fwrite($this->stdout, sprintf("A website already exists in %s; it was left as it is.\n", $application->paths->project()));
+            } else {
+                $installer->createProject($starter, $arguments['site-name'], $arguments['base-url']);
+                fwrite($this->stdout, sprintf("Created the website in %s from the \"%s\" starter.\n", $application->paths->project(), $starter));
+            }
+
+            if ($arguments['add-user'] === null && !$installer->hasUsers()) {
+                fwrite($this->stdout, "Next, create an admin user: bin/campanella --add-user=admin\n");
+            }
+
+            return self::EXIT_OK;
+        } catch (InstallError $error) {
+            fwrite($this->stderr, (new Application(new Paths($arguments['root'])))->translator()->translate($error->reason, $arguments['locale']) . "\n");
+
+            return self::EXIT_USAGE;
+        } catch (InvalidArgumentException $error) {
             fwrite($this->stderr, $error->getMessage() . "\n");
 
             return self::EXIT_USAGE;

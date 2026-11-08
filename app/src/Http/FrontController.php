@@ -40,6 +40,10 @@ final class FrontController
 
         $path = (string) parse_url($uri, PHP_URL_PATH);
 
+        if (!$this->repository->exists()) {
+            return Response::text("This website is not set up yet. Its administrator can set it up at /admin.\n", 503);
+        }
+
         try {
             return $this->lock->synchronized(fn (): Response => $this->respond($path));
         } catch (InvalidDataException | StorageException) {

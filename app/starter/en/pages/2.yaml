@@ -1,0 +1,12 @@
+id: 2
+alias:
+  en: /about
+title:
+  en: 'About us'
+description:
+  en: 'Who we are and what we do.'
+layout: default
+status: published
+placements:
+  body.main:
+    - about-text

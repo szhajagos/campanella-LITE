@@ -10,6 +10,12 @@
     padding-top: 12vh;
 }
 
+.setup {
+    max-width: 34rem;
+    padding-top: 6vh;
+    padding-bottom: 6vh;
+}
+
 /* "textarea.form-control" from Bootstrap would otherwise win */
 .admin textarea.commands {
     min-height: 18rem;
