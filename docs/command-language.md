@@ -124,7 +124,7 @@ The same result is available as JSON (`bin/campanella --json`). Every message ca
 
 ### Languages
 
-Messages come from the catalogues in `app/translations/messages.{locale}.yaml`. English is the default and the fallback for missing translations. To add a language, copy `messages.en.yaml` and translate the texts; the keys stay the same.
+Messages come from the catalogues in `app/translations/messages.{locale}.yaml`; English (`en`) and Hungarian (`hu`) are included. English is the default, and any text missing from another catalogue is shown in English, key by key. To add a language, copy `messages.en.yaml` and translate the texts; the keys and the `{placeholders}` stay the same (a test checks this for every catalogue). The same catalogues hold the texts of the public theme (`theme.*`), shown in the visitor's language.
 
 ## Commands
 

@@ -42,6 +42,7 @@ Status: **Accepted** = agreed and binding; **Proposed** = current plan, open to 
 | 2026-11-08 | Admin | Admin users live in `config/users.yaml`, outside the web root and the project; the first user is created with `bin/campanella --add-user`, a web setup comes with the installer. | Accepted |
 | 2026-11-08 | Admin | The dashboard is server-rendered (Twig) with a small framework-free script; commands run through the same interpreter and JSON endpoint the AI module will use. | Accepted |
 | 2026-11-08 | Admin | History recall uses Alt+↑/↓, because plain arrow keys move the cursor in the multi-line command box. | Accepted |
+| 2026-11-08 | Languages | Hungarian is the first translation of the messages. Any text missing from a catalogue is shown in English, key by key. Catalogues must use the English keys and placeholders (checked by tests). | Accepted |
 | 2026-11-07 | URLs | When an alias changes, the old alias redirects (301) to the page's current alias, until another page takes the old alias. Redirects point to page ids, so renaming twice never creates a chain. | Accepted |
 
 ## MVP (0.1.0)
@@ -61,14 +62,13 @@ Not yet scheduled; order to be decided.
 
 - **AI module:** model adapter with exchangeable models (local or remote), natural language to command batches, approval workflow, maintenance suggestions. Preferred models are openly available under MIT or Apache 2.0.
 - **Multilingual websites:** language URL prefixes, translation workflow, language switcher.
-- **Admin message translations:** Hungarian first.
+- **More message translations** besides English and Hungarian.
 - **HTML content** alongside Markdown.
 - **Multiple users** with restricted, role-based command permissions.
 - **Images and media management.**
 - **More web servers:** Nginx configuration.
 - **Themes:** exchangeable theme directories.
 - **Smarter cache invalidation:** remove only the pages affected by a change.
-- **Theme texts in more languages:** a Hungarian catalogue for the public theme texts (404 page, navigation labels) and the admin messages.
 - **Hosting without a configurable document root:** an installer option that protects `app/`, `project/` and `var/` when the web root cannot be set to `public/`.
 - **User guide** in `docs/guide/`.
 

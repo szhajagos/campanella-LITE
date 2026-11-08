@@ -31,7 +31,7 @@ Messages are in English by default. Each admin chooses their own language with:
 user set locale hu
 ```
 
-A language is available when `app/translations/messages.{locale}.yaml` exists; missing texts fall back to English.
+Available languages: English (`en`) and Hungarian (`hu`). A language is available when `app/translations/messages.{locale}.yaml` exists; any text missing from it is shown in English.
 
 ### Preview
 

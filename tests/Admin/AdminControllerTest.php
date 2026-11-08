@@ -161,6 +161,23 @@ final class AdminControllerTest extends CommandTestCase
         self::assertSame('en', $this->application->users()->find('admin')?->locale);
     }
 
+    public function testSpeaksTheUsersLanguage(): void
+    {
+        $this->login();
+        $data = $this->json($this->runBatch('user set locale hu'));
+        self::assertStringContainsString('Az üzenetek nyelve mostantól: hu.', (string) $data['html'], 'The answer is already in the new language.');
+
+        $dashboard = $this->get('/admin');
+        self::assertStringContainsString('<html lang="hu">', $dashboard->body);
+        self::assertStringContainsString('Futtatás', $dashboard->body);
+        self::assertStringContainsString('Oldalak: 2 (publikált: 2, vázlat: 0)', $dashboard->body);
+
+        $data = $this->json($this->runBatch("set site.name Kovács\nget page.99"));
+        self::assertStringContainsString('<strong>Rendben.</strong>', (string) $data['html']);
+        self::assertStringContainsString('Nincs oldal ezzel az azonosítóval vagy aliasszal', (string) $data['html']);
+        self::assertStringContainsString('A köteg nem futott le, semmi nem változott.', (string) $data['text']);
+    }
+
     public function testPreviewsDraftsForLoggedInUsersOnly(): void
     {
         $this->apply('page unpublish 2');

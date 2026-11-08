@@ -79,6 +79,13 @@ final class CliApplicationTest extends TestCase
         self::assertSame(CliApplication::EXIT_USAGE, $code);
     }
 
+    public function testAnswersInHungarian(): void
+    {
+        [, $out] = $this->cli(['--locale=hu', '-e', 'get site.name']);
+
+        self::assertSame("[1] Rendben. site.name = Example Ltd.\n→ Kész. Semmi nem változott.\n", $out);
+    }
+
     public function testShowsHelp(): void
     {
         [$code, $out] = $this->cli(['--help']);
