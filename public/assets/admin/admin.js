@@ -45,6 +45,7 @@
             document.getElementById('status').innerHTML = data.status_html;
             document.getElementById('pages').innerHTML = data.pages_html;
             historyBox.innerHTML = data.history_html;
+            document.getElementById('site-name').textContent = data.site_name;
             historyIndex = -1;
         } catch (error) {
             response.textContent = String(error);

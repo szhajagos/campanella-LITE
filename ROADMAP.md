@@ -70,6 +70,7 @@ Not yet scheduled; order to be decided.
 - **Themes:** exchangeable theme directories.
 - **Smarter cache invalidation:** remove only the pages affected by a change.
 - **Hosting without a configurable document root:** an installer option that protects `app/`, `project/` and `var/` when the web root cannot be set to `public/`.
+- **Browser tests** with Playwright (login, running commands, the public pages) in CI; the same setup can produce the screenshots of the user guide.
 - **User guide** in `docs/guide/`.
 
 ## Open questions

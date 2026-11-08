@@ -200,6 +200,7 @@ final class AdminController
             'status_html' => $this->twig->render('status.html.twig', $panels),
             'pages_html' => $this->twig->render('pages.html.twig', $panels),
             'history_html' => $this->twig->render('history.html.twig', $panels),
+            'site_name' => $panels['site_name'],
         ]);
     }
 

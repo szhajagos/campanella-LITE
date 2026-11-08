@@ -10,7 +10,8 @@
     padding-top: 12vh;
 }
 
-.commands {
+/* "textarea.form-control" from Bootstrap would otherwise win */
+.admin textarea.commands {
     min-height: 18rem;
     font-family: var(--bs-font-monospace);
     font-size: .9rem;
@@ -70,6 +71,20 @@
 .history-item code {
     white-space: pre-wrap;
     color: inherit;
+}
+
+/* The page list fills its card: keep the first and last column off the card's edge */
+#pages .table > :not(caption) > * > :first-child {
+    padding-left: 1rem;
+}
+
+#pages .table > :not(caption) > * > :last-child {
+    padding-right: 1rem;
+}
+
+.admin-navbar .container-fluid {
+    flex-wrap: wrap;
+    row-gap: .5rem;
 }
 
 .status-bar {

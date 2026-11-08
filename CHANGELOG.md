@@ -52,6 +52,7 @@ Added, Changed, Deprecated, Removed, Fixed, Security.
 - Admin users in `config/users.yaml`, created with `bin/campanella --add-user=<name>`.
 - `user set locale` command: each admin chooses the language of their messages.
 - Developer documentation: `docs/admin.md`, `docs/security.md`.
+- Admin dashboard layout checked in a real browser (Chrome via Playwright) on desktop and mobile widths.
 - Hungarian message catalogue (`messages.hu.yaml`) for command responses, help, validation rules, the admin dashboard and the public theme; texts missing from a catalogue are shown in English.
 
 ### Security
