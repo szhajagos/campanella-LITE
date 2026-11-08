@@ -19,14 +19,20 @@ Added, Changed, Deprecated, Removed, Fixed, Security.
 - Content can refer to files as `![](file:12)` and `[text](file:13)`; `check` reports references to files that do not exist.
 - Uploads and purges are written to the command log.
 - Developer documentation: `docs/files.md`.
+- Files on the website: `![](file:12)` shows an image in widths of 480, 960 and 1600 pixels with `srcset`, plus WebP copies when the server can make them; with a title and alone in a paragraph it becomes a figure with a caption; audio and video get players; `[text](file:13)` links to the file. The alt text defaults to the file's description in the page's language.
+- Published files have readable ASCII addresses (`/files/12-conference-hall-960.jpg`), are made on their first request and then served by the web server; outdated addresses redirect to the current one.
+- File panel in the dashboard with thumbnails of the newest files; a click inserts the file's reference into the command box.
+- Asset addresses carry a version (`theme.css?v=…`), so browsers load updated CSS and JavaScript after an update without a forced reload.
 
 ### Changed
 
+- `cache clear` also removes published files; archiving, purging or renaming a file removes its outdated published copies.
 - The admin command box is emptied after a batch has run, so a second click on Run cannot repeat it. After a dry run or an error the text stays; Alt+↑ brings back an emptied batch.
 
 ### Security
 
 - Uploaded files are recognised by their content; only types that cannot carry scripts or macros are accepted. PDFs with JavaScript, launch actions, embedded files or XFA forms and Office documents with macros or ActiveX controls are refused; images are decoded once and limited to 10000 px per side.
+- Images are published only as re-encoded copies without EXIF, GPS or camera data; uploaded originals are never served.
 
 ### Removed
 

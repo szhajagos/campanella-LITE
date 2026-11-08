@@ -40,6 +40,7 @@ The rule that holds the design together: **the command interpreter is the only c
 | Undo snapshots, `undo` | `Campanella\Lite\Project\UndoHistory` | M6 | Done |
 | Installer, starters, web setup | `Campanella\Lite\Install` | M6 | Done |
 | File repository, uploads, `file` commands | `Campanella\Lite\Files` | M7 | Done |
+| Files on the website, image sizes, file panel, asset versions | `Campanella\Lite\Files`, `Campanella\Lite\Render\Markdown` | M8 | Done |
 
 ## Layers built in M1
 
@@ -120,6 +121,12 @@ Commands that touch files outside the project (`build`, `cache clear`) return de
 - **`FileRepository::add()`** is the single way into the file repository, used by the admin upload, the CLI and later the AI module. Under the write lock it stores the file with a random name, writes its manifest and hands out the next id. This is the one write to `project/` outside the interpreter; it only adds a file nothing refers to yet, so it cannot change the website.
 - **`FileInspector`** detects the type from the file's signature and refuses anything not on the list of `FileTypes` or carrying active content.
 - Manifests are entities like pages (`EntityRef::file`, `Workspace::putFile`), so the `file` commands, validation, the log and undo work as for everything else. `file purge` deletes manifests and stored files after the batch, like `build`.
+
+### Files on the website (M8)
+
+- **`PublicFiles`** knows every address a file is published at (`/files/{id}-{slug}[-{width}].{ext}`), makes the file behind an address on its first request (with `ImageResizer`, GD) and stores it through a second `PageCache` with its own manifest. `keeper()` tells which published copies are still current; the interpreter's commit hook prunes the others when a file changes.
+- **`FileEmbedder`** is a league/commonmark event listener: after a document is parsed, it replaces `file:` images with `EmbeddedFile`/`FileFigure` nodes carrying escaped HTML (pictures, players, links) and points `file:` links to the published address.
+- The front controller hands `/files/` addresses to `PublicFiles` before routing pages.
 
 ### I18n (`Campanella\Lite\I18n`)
 

@@ -11,12 +11,22 @@ final class Response
 {
     /**
      * @param array<string, string> $headers
+     * @param string|null           $file    a file to send as the body instead of $body (large files are not read into memory)
      */
     public function __construct(
         public readonly int $status,
         public readonly string $body = '',
         public readonly array $headers = [],
+        public readonly ?string $file = null,
     ) {
+    }
+
+    /**
+     * Sends a file from disk.
+     */
+    public static function file(string $path, string $mimeType): self
+    {
+        return new self(200, '', ['Content-Type' => $mimeType, 'Content-Length' => (string) filesize($path)], $path);
     }
 
     public static function html(string $body, int $status = 200): self
@@ -47,7 +57,7 @@ final class Response
      */
     public function withHeaders(array $headers): self
     {
-        return new self($this->status, $this->body, $headers + $this->headers);
+        return new self($this->status, $this->body, $headers + $this->headers, $this->file);
     }
 
     public static function text(string $body, int $status): self
@@ -63,7 +73,13 @@ final class Response
             header($name . ': ' . $value);
         }
 
-        if ($withBody) {
+        if (!$withBody) {
+            return;
+        }
+
+        if ($this->file !== null) {
+            readfile($this->file);
+        } else {
             echo $this->body;
         }
     }

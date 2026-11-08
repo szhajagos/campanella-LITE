@@ -53,3 +53,20 @@ body {
 .not-found {
     padding-block: 4rem;
 }
+
+/* Files in content */
+.block img,
+.block video {
+    max-width: 100%;
+    height: auto;
+}
+
+.block audio {
+    width: 100%;
+    max-width: 36rem;
+}
+
+.file-figure {
+    display: block;
+}
+

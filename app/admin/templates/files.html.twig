@@ -1,0 +1,19 @@
+{% if files %}
+<ul class="file-grid list-unstyled mb-0 p-3">
+{% for file in files %}
+    <li>
+        <button type="button" class="file-tile" data-reference="{{ file.reference }}" title="{{ t('files.insert', {reference: file.reference}) }}">
+            {% if file.thumbnail %}
+            <img src="{{ file.thumbnail }}" alt="" loading="lazy">
+            {% else %}
+            <span class="file-icon file-icon-{{ file.kind }}">{{ file.extension|upper }}</span>
+            {% endif %}
+            <span class="file-name">{{ file.id }} · {{ file.filename }}</span>
+            <span class="file-size">{{ file.size }}</span>
+        </button>
+    </li>
+{% endfor %}
+</ul>
+{% else %}
+<p class="text-body-secondary small m-3">{{ t('files.none') }}</p>
+{% endif %}

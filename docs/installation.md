@@ -5,6 +5,8 @@ This document describes how to put Campanella Lite on a web server, set it up an
 ## Requirements
 
 - PHP 8.3 or newer with the `mbstring` extension
+- Recommended: the `gd` extension (image sizes, WebP, removing location data from photos) and `zip` (checking uploaded Office documents)
+- For uploads, PHP's `upload_max_filesize` and `post_max_size` at least as large as the files you upload (the repository accepts up to 10 MB, videos up to 100 MB)
 - Apache with `mod_rewrite` (`mod_headers` is used when available)
 - Write permission for the web server user in `config/`, `project/`, `var/` and `public/`
 

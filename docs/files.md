@@ -75,7 +75,39 @@ The server's own upload limits (`upload_max_filesize`, `post_max_size`) can be l
 
 ## References in content
 
-Content refers to files by id in Markdown links and images: `![](file:12)`, `[Price list](file:13)`. The validator reports a reference to a file that does not exist (`content.unknown_file`); archived files are still allowed, because archiving is reversible. How references are shown on the website (image sizes, WebP, players, download links) is part of milestone 8.
+Content refers to files by id in Markdown links and images. The validator reports a reference to a file that does not exist (`content.unknown_file`); archived files are still allowed, because archiving is reversible.
+
+| Markdown | On the website |
+| --- | --- |
+| `![](file:12)` | The image in every published size, with WebP where the server can make it. The alt text is the file's description in the page's language (or the default language). |
+| `![A garden in spring](file:12)` | The same with this alt text. |
+| `![](file:12 "The garden in April")` | Alone in a paragraph: a `<figure>` with the caption. Inside text: the caption becomes the image's title. |
+| `![](file:14)` | Audio: an `<audio>` player. Video: a `<video>` player. Other files: a link with the file name. |
+| `[Price list](file:13)` | A link to the file (for images: to the largest size). |
+
+References to archived files show nothing (images, players) or only their text (links).
+
+In the dashboard, the *Files* panel shows the newest files; a click puts the right reference into the command box where the cursor is.
+
+## On the website
+
+Files are published under `/files/`, with readable, ASCII-only addresses made from the id and the file name:
+
+```
+/files/12-conference-hall-480.jpg     /files/12-conference-hall-480.webp
+/files/12-conference-hall-960.jpg     /files/12-conference-hall-960.webp
+/files/12-conference-hall-1600.jpg    /files/12-conference-hall-1600.webp
+/files/13-price-list.pdf
+```
+
+- **Images** are published in widths of 480, 960 and 1600 pixels, never wider than the image itself, plus WebP copies when PHP's GD can write WebP. The page uses `srcset` and `sizes`, so phones load the small ones. Every published image is re-encoded with GD, which drops all metadata (EXIF, GPS position, camera details) after applying the camera's orientation; **the uploaded original is never published**. GIF images (they may be animated) are published as uploaded.
+- **Other files** are published as uploaded.
+- **Without GD** images cannot be resized; they are then published as uploaded, metadata included, and `width`/`height` still come from the file.
+
+Nothing is published in advance. The first request of an address reaches the front controller, which makes the file, stores it in `public/files/`, records it in `var/files-manifest.json` and returns it; from then on the web server serves it without PHP. An address that is not current (an old file name, a size that is not published) redirects (301) to the file's current link address; archived and unknown files get 404.
+
+Published files are not deleted after every change like pages are. When a change archives, purges or renames a file (or after `undo`), the copies that are no longer current are removed. `cache clear` removes all of them; they are made again on demand.
+
 
 ## Deleting and undo
 

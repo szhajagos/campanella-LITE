@@ -13,6 +13,7 @@ The most important rule of Campanella Lite: **the command language changes data,
 | Templates | Themes are files in the code base, not editable through commands. |
 | Drafts | Never shown to visitors; only the admin preview shows them. |
 | Web root | Only `public/` is exposed. `app/`, `config/`, `project/` and `var/` are outside it. Hidden files and directory listings are refused by `.htaccess`. |
+| Published files | Images reach visitors only as copies re-encoded with GD, without EXIF, GPS or camera data; the uploaded originals stay in `project/`. Archived files are no longer served. Every response carries `X-Content-Type-Options: nosniff`. |
 | Generated files | Tracked in a manifest; the generator never overwrites or deletes a file it did not create. |
 
 ## Admin

@@ -72,7 +72,7 @@ Built from the inside out: storage and command interpreter first, user interface
 ## 0.2.0 – Files
 
 - [x] **M7 – File repository:** manifest and storage, numeric ids, type and size checks, upload in the admin (drag and drop into the command box, response with the file's data) and on the CLI, `list files` with filters, `get`/`set`, `file describe`, `file rename`, `file delete` (archive), `file purge`, undo of file commands, reference checks.
-- [ ] **M8 – Files on the website:** `file:{id}` in Markdown, rendering per type (image with alt text and caption, audio, video, download link), image sizes and WebP with GD, file panel with thumbnails in the admin, versioned asset URLs (no more Ctrl+F5 after updates).
+- [x] **M8 – Files on the website:** `file:{id}` in Markdown, rendering per type (image with alt text and caption, audio, video, download link), image sizes and WebP with GD, file panel with thumbnails in the admin, versioned asset URLs (no more Ctrl+F5 after updates).
 
 ## After the MVP
 

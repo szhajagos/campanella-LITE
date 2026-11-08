@@ -16,8 +16,16 @@ use Campanella\Lite\Model\PageStatus;
 use Campanella\Lite\Model\Project;
 use Campanella\Lite\Model\Region;
 use Campanella\Lite\Routing\Urls;
-use League\CommonMark\CommonMarkConverter;
+use Campanella\Lite\Files\PublicFiles;
+use Campanella\Lite\Render\Markdown\EmbeddedFile;
+use Campanella\Lite\Render\Markdown\EmbeddedHtmlRenderer;
+use Campanella\Lite\Render\Markdown\FileEmbedder;
+use Campanella\Lite\Render\Markdown\FileFigure;
 use League\CommonMark\ConverterInterface;
+use League\CommonMark\Environment\Environment as MarkdownEnvironment;
+use League\CommonMark\Event\DocumentParsedEvent;
+use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
+use League\CommonMark\MarkdownConverter;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 use Twig\TwigFunction;
@@ -34,6 +42,7 @@ final class PageRenderer
     public const ASSETS = '/assets';
 
     private readonly ConverterInterface $markdown;
+    private readonly ?FileEmbedder $embedder;
 
     /** @var array<string, Environment> theme name => Twig environment */
     private array $environments = [];
@@ -42,12 +51,24 @@ final class PageRenderer
         private readonly string $themesDirectory,
         private readonly Translator $translator,
         private readonly string|false $cacheDirectory = false,
+        ?PublicFiles $files = null,
+        private readonly string $publicDirectory = '',
     ) {
-        $this->markdown = new CommonMarkConverter([
+        $environment = new MarkdownEnvironment([
             'html_input' => 'escape',
             'allow_unsafe_links' => false,
             'max_nesting_level' => 50,
         ]);
+        $environment->addExtension(new CommonMarkCoreExtension());
+        $this->embedder = $files === null ? null : new FileEmbedder($files);
+
+        if ($this->embedder !== null) {
+            $environment->addEventListener(DocumentParsedEvent::class, $this->embedder->onDocumentParsed(...));
+            $environment->addRenderer(EmbeddedFile::class, new EmbeddedHtmlRenderer());
+            $environment->addRenderer(FileFigure::class, new EmbeddedHtmlRenderer());
+        }
+
+        $this->markdown = new MarkdownConverter($environment);
     }
 
     public function render(Project $project, Page $page, string $language): string
@@ -144,7 +165,7 @@ final class PageRenderer
             $content = $project->content($name);
 
             if ($content !== null) {
-                $blocks[] = ['name' => $name, 'html' => $this->html($content, $language, $project->site->defaultLanguage)];
+                $blocks[] = ['name' => $name, 'html' => $this->html($project, $content, $language)];
             }
         }
 
@@ -201,13 +222,32 @@ final class PageRenderer
         return $view;
     }
 
-    private function html(Content $content, string $language, string $defaultLanguage): string
+    private function html(Project $project, Content $content, string $language): string
     {
         $translation = $content->translation($language)
-            ?? $content->translation($defaultLanguage)
+            ?? $content->translation($project->site->defaultLanguage)
             ?? (array_values($content->translations)[0] ?? null);
 
-        return $translation === null ? '' : $this->markdown->convert($translation->body)->getContent();
+        if ($translation === null) {
+            return '';
+        }
+
+        $this->embedder?->use($project, $language);
+
+        return $this->markdown->convert($translation->body)->getContent();
+    }
+
+    /**
+     * The address of a theme asset with a version that changes with the file,
+     * so browsers load the new file after an update: /assets/x.css?v=1a2b3c4d.
+     */
+    public function asset(string $path): string
+    {
+        $path = ltrim($path, '/');
+        $file = $this->publicDirectory . self::ASSETS . '/' . $path;
+        $time = $this->publicDirectory !== '' && !str_contains($path, '..') ? @filemtime($file) : false;
+
+        return self::ASSETS . '/' . $path . ($time === false ? '' : '?v=' . substr(md5((string) $time), 0, 8));
     }
 
     private static function text(LocalizedText $text, string $language, string $defaultLanguage): string
@@ -238,6 +278,8 @@ final class PageRenderer
             't',
             fn (string $key, string $language, array $params = []): string => $this->translator->translate(new Message('theme.' . $key, $params), $language),
         ));
+
+        $twig->addFunction(new TwigFunction('asset', $this->asset(...)));
 
         return $this->environments[$theme] = $twig;
     }

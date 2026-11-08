@@ -13,12 +13,14 @@ use Campanella\Lite\Command\Result\BatchResult;
 use Campanella\Lite\Exception\InvalidDataException;
 use Campanella\Lite\Files\FileRejected;
 use Campanella\Lite\Files\FileTypes;
+use Campanella\Lite\Files\ImageResizer;
 use Campanella\Lite\Http\Request;
 use Campanella\Lite\Http\Response;
 use Campanella\Lite\I18n\Message;
 use Campanella\Lite\I18n\Translator;
 use Campanella\Lite\Install\InstallError;
 use Campanella\Lite\Install\Installer;
+use Campanella\Lite\Model\File;
 use Campanella\Lite\Model\PageStatus;
 use Campanella\Lite\Model\Project;
 use Campanella\Lite\Routing\Urls;
@@ -38,6 +40,7 @@ use Twig\TwigFunction;
  *     POST /admin/run                run a command batch (JSON, X-CSRF-Token header)
  *     GET  /admin/preview/{id}[/{language}]  show any page, drafts included
  *     POST /admin/upload            add files to the file repository (multipart "files[]")
+ *     GET  /admin/files/{id}/thumbnail  a small version of an image, archived ones included
  *
  * While there is no admin user, /admin shows the first-time setup instead
  * (POST /admin/setup), protected by the setup key in config/setup-key.txt.
@@ -58,6 +61,10 @@ final class AdminController
         'Cache-Control' => 'no-store',
         'X-Robots-Tag' => 'noindex, nofollow',
     ];
+
+    /** How many of the newest files the file panel shows. */
+    private const FILE_PANEL_SIZE = 24;
+    private const THUMBNAIL_WIDTH = 240;
 
     /** A valid hash to verify against when the user name is unknown, so timing does not reveal it. */
     private const DUMMY_HASH = '$2y$10$GgEEND9UhV22LTe9h9cF4.Am97PmGMhmlPtD7JgcvNCdbDTSSV.PW';
@@ -86,6 +93,7 @@ final class AdminController
             't',
             fn (string $key, array $params = []): string => $this->translate('admin.' . $key, $params),
         ));
+        $this->twig->addFunction(new TwigFunction('asset', fn (string $path): string => $this->app->renderer()->asset($path)));
     }
 
     public function handle(Request $request): Response
@@ -110,6 +118,7 @@ final class AdminController
             $path === '/admin/run' && $request->method === 'POST' => $this->run($request),
             $path === '/admin/upload' && $request->method === 'POST' => $this->upload($request),
             str_starts_with($path, '/admin/preview/') && in_array($request->method, ['GET', 'HEAD'], true) => $this->preview($path),
+            preg_match('#^/admin/files/([1-9][0-9]{0,9})/thumbnail$#', $path, $match) === 1 && in_array($request->method, ['GET', 'HEAD'], true) => $this->thumbnail((int) $match[1]),
             default => Response::text("Not found.\n", 404),
         };
 
@@ -220,9 +229,84 @@ final class AdminController
             'text' => (new TextFormatter($this->app->translator()))->format($result, $this->locale),
             'status_html' => $this->twig->render('status.html.twig', $panels),
             'pages_html' => $this->twig->render('pages.html.twig', $panels),
+            'files_html' => $this->twig->render('files.html.twig', $panels),
             'history_html' => $this->twig->render('history.html.twig', $panels),
             'site_name' => $panels['site_name'],
         ]);
+    }
+
+    /**
+     * The newest files, for the file panel.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function fileList(Project $project): array
+    {
+        $files = array_reverse(array_values(array_filter($project->files, static fn (File $file): bool => !$file->isArchived())));
+        $list = [];
+
+        foreach (array_slice($files, 0, self::FILE_PANEL_SIZE) as $file) {
+            $list[] = [
+                'id' => $file->id,
+                'filename' => $file->filename,
+                'kind' => $file->kind(),
+                'extension' => $file->extension,
+                'size' => ListFilesCommand::size($file),
+                'reference' => self::reference($file),
+                'thumbnail' => $file->kind() === FileTypes::IMAGE ? '/admin/files/' . $file->id . '/thumbnail' : null,
+            ];
+        }
+
+        return $list;
+    }
+
+    /** What to write in content to use a file. */
+    private static function reference(File $file): string
+    {
+        return in_array($file->kind(), [FileTypes::IMAGE, FileTypes::AUDIO, FileTypes::VIDEO], true)
+            ? '![](' . $file->reference() . ')'
+            : '[' . str_replace(['[', ']'], '', $file->filename) . '](' . $file->reference() . ')';
+    }
+
+    /**
+     * A small version of an image for the file panel, kept in var/thumbnails/.
+     */
+    private function thumbnail(int $id): Response
+    {
+        if ($this->currentUser() === null) {
+            return Response::text("Not logged in.\n", 401);
+        }
+
+        $file = $this->app->repository()->load()->file($id);
+        $source = $file === null ? null : $this->app->fileRepository()->pathOf($file);
+
+        if ($file === null || $source === null || $file->kind() !== FileTypes::IMAGE) {
+            return Response::text("Not found.\n", 404);
+        }
+
+        $width = $file->width ?? 0;
+        $height = $file->height ?? 0;
+
+        if ($file->extension === 'gif' || !ImageResizer::canResize($width, $height, $file->size)) {
+            return Response::file($source, $file->mimeType);
+        }
+
+        $directory = $this->app->paths->var() . '/thumbnails';
+        $target = $directory . '/' . $file->id . '-' . substr(sha1($file->storedFilename), 0, 12) . '.' . $file->extension;
+
+        if (!is_file($target)) {
+            if (!is_dir($directory)) {
+                @mkdir($directory, 0775, true);
+            }
+
+            try {
+                (new ImageResizer())->resize($source, $target, self::THUMBNAIL_WIDTH, $file->extension);
+            } catch (FileRejected) {
+                return Response::text("Not found.\n", 404);
+            }
+        }
+
+        return Response::file($target, $file->mimeType);
     }
 
     /**
@@ -268,7 +352,7 @@ final class AdminController
                     'id' => $file->id,
                     'kind' => $file->kind(),
                     'size' => ListFilesCommand::size($file),
-                    'reference' => $file->kind() === FileTypes::IMAGE ? '![](' . $file->reference() . ')' : '[' . $file->filename . '](' . $file->reference() . ')',
+                    'reference' => self::reference($file),
                 ];
             } catch (FileRejected $rejected) {
                 $results[] = ['ok' => false, 'filename' => $name, 'message' => $this->translateMessage(
@@ -289,6 +373,7 @@ final class AdminController
             'html' => $this->twig->render('upload.html.twig', ['results' => $results, 'locale' => $this->locale]),
             'text' => implode("\n", array_column($results, 'message')),
             'status_html' => $this->twig->render('status.html.twig', $panels),
+            'files_html' => $this->twig->render('files.html.twig', $panels),
         ]);
     }
 
@@ -521,7 +606,7 @@ final class AdminController
      */
     private function panels(string $user): array
     {
-        $panels = ['history' => $this->history->list($user), 'pages' => [], 'status' => null, 'project_error' => null, 'site_name' => 'Campanella Lite', 'locale' => $this->locale];
+        $panels = ['history' => $this->history->list($user), 'pages' => [], 'files' => [], 'status' => null, 'project_error' => null, 'site_name' => 'Campanella Lite', 'locale' => $this->locale];
 
         try {
             $project = $this->app->repository()->load();
@@ -542,6 +627,7 @@ final class AdminController
             'changed' => $this->lastChange(),
         ];
         $panels['pages'] = $this->pageList($project);
+        $panels['files'] = $this->fileList($project);
 
         return $panels;
     }

@@ -24,6 +24,7 @@ Running it again for an existing user sets a new password. Users are stored in `
 | Response | One line per command (`Ok.`, `Error:`, skipped), tables from `list`, values from `get`, the rule violations that blocked a batch, and the summary. |
 | History | The last 50 different batches of this user, newest first; click one to put it back into the command box. |
 | Pages | Every page with its address and status, a link to the public page and a **Preview** link, which also works for drafts. |
+| Files | The 24 newest files with thumbnails (images) or their type; a click puts the reference (`![](file:12)` or `[name](file:13)`) into the command box at the cursor. |
 | Status bar | Number of pages (published and drafts), generated pages, languages, time of the last change. |
 
 ### Language of the messages
@@ -49,6 +50,7 @@ Available languages: English (`en`) and Hungarian (`hu`). A language is availabl
 | `POST /admin/logout` | Log out: `_csrf` (form) |
 | `POST /admin/run` | Run a batch: JSON `{"commands": "…", "dry_run": false}`, header `X-CSRF-Token` |
 | `GET /admin/preview/{id}[/{language}]` | Preview a page |
+| `GET /admin/files/{id}/thumbnail` | A 240 pixel wide version of an image for the file panel, archived files included (kept in `var/thumbnails/`) |
 | `POST /admin/upload` | Add files: multipart field `files[]`, header `X-CSRF-Token`; JSON with `files` (id, filename, reference) and the response HTML |
 
 `POST /admin/run` answers with JSON: `ok`, `outcome`, `text` (the plain-text response), and the server-rendered HTML of the response, status bar, page list and history (`html`, `status_html`, `pages_html`, `history_html`). Without a valid session it answers `401`, without a valid CSRF token `403`.

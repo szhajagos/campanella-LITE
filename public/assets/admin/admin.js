@@ -93,6 +93,7 @@
 
                 html += uploaded.html;
                 document.getElementById('status').innerHTML = uploaded.status_html;
+                document.getElementById('files').innerHTML = uploaded.files_html;
                 pending = pending.filter((file) => !files.includes(file));
                 renderAttachments();
             }
@@ -110,6 +111,7 @@
                 html += data.html;
                 document.getElementById('status').innerHTML = data.status_html;
                 document.getElementById('pages').innerHTML = data.pages_html;
+                document.getElementById('files').innerHTML = data.files_html;
                 historyBox.innerHTML = data.history_html;
                 document.getElementById('site-name').textContent = data.site_name;
                 historyIndex = -1;
@@ -182,6 +184,20 @@
             event.preventDefault();
             recall(event.key === 'ArrowUp' ? 1 : -1);
         }
+    });
+
+    // A click on a file puts its reference ("![](file:12)") where the cursor is.
+    document.getElementById('files').addEventListener('click', (event) => {
+        const tile = event.target.closest('[data-reference]');
+
+        if (!tile) {
+            return;
+        }
+
+        const start = commands.selectionStart ?? commands.value.length;
+        const end = commands.selectionEnd ?? start;
+        commands.setRangeText(tile.dataset.reference, start, end, 'end');
+        commands.focus();
     });
 
     historyBox.addEventListener('click', (event) => {

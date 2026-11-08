@@ -55,6 +55,7 @@ use Campanella\Lite\Command\Interpreter;
 use Campanella\Lite\Command\Log\CommandLog;
 use Campanella\Lite\Http\FrontController;
 use Campanella\Lite\Files\FileRepository;
+use Campanella\Lite\Files\PublicFiles;
 use Campanella\Lite\I18n\Translator;
 use Campanella\Lite\Install\Installer;
 use Campanella\Lite\Project\EntityRef;
@@ -91,15 +92,25 @@ final class Application
     public function interpreter(): Interpreter
     {
         $cache = $this->pageCache();
+        $fileCache = $this->fileCache();
+        $publicFiles = $this->publicFiles();
+        $repository = $this->repository();
 
         return new Interpreter(
-            $this->repository(),
+            $repository,
             $this->lock(),
             $this->registry(),
             // Any change may affect any page (menus, layouts, the site name), so all generated pages go.
-            onCommit: static function (array $changes) use ($cache): void {
+            // Published files only go when their file was archived, purged or renamed.
+            onCommit: static function (array $changes) use ($cache, $fileCache, $publicFiles, $repository): void {
                 /** @var list<EntityRef> $changes */
                 $cache->clear();
+
+                $files = array_filter($changes, static fn (EntityRef $ref): bool => $ref->type === EntityRef::FILE);
+
+                if ($changes === [] || $files !== []) {
+                    $fileCache->prune($publicFiles->keeper($repository->load()));
+                }
             },
             undo: $this->undoHistory(),
             log: $this->commandLog(),
@@ -120,7 +131,7 @@ final class Application
 
     public function frontController(): FrontController
     {
-        return new FrontController($this->repository(), $this->lock(), new Router(), $this->renderer(), $this->pageCache());
+        return new FrontController($this->repository(), $this->lock(), new Router(), $this->renderer(), $this->pageCache(), $this->publicFiles());
     }
 
     /**
@@ -176,12 +187,30 @@ final class Application
 
     public function renderer(): PageRenderer
     {
-        return $this->renderer ??= new PageRenderer(self::themesDirectory(), $this->translator(), $this->paths->var() . '/cache/twig');
+        return $this->renderer ??= new PageRenderer(
+            self::themesDirectory(),
+            $this->translator(),
+            $this->paths->var() . '/cache/twig',
+            $this->publicFiles(),
+            $this->paths->public(),
+        );
     }
 
     public function pageCache(): PageCache
     {
         return new PageCache(new FileStore($this->paths->public()), new FileStore($this->paths->var()));
+    }
+
+    /** Published files (image sizes, documents, media) in the web root; pruned rather than cleared. */
+    public function fileCache(): PageCache
+    {
+        return new PageCache(new FileStore($this->paths->public()), new FileStore($this->paths->var()), PageCache::FILES_MANIFEST);
+    }
+
+    /** The addresses of files on the website and the files behind them. */
+    public function publicFiles(): PublicFiles
+    {
+        return new PublicFiles($this->fileRepository(), $this->fileCache(), $this->paths->var() . '/tmp');
     }
 
     public function siteBuilder(): SiteBuilder
@@ -198,7 +227,7 @@ final class Application
                 new ListCommand(),
                 new CheckCommand(),
                 new BuildCommand($this->siteBuilder()),
-                new CacheClearCommand($this->pageCache()),
+                new CacheClearCommand($this->pageCache(), $this->fileCache()),
                 new RedirectRemoveCommand(),
                 new UndoCommand(),
                 new LogCommand($this->commandLog()),

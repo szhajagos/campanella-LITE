@@ -69,6 +69,15 @@
                 <div id="pages">{% include 'pages.html.twig' %}</div>
             </div>
         </section>
+        <section class="col-12">
+            <div class="card">
+                <div class="card-header d-flex align-items-center">
+                    <h2 class="h6 mb-0 me-auto">{{ t('dashboard.files') }}</h2>
+                    <span class="small text-body-secondary d-none d-md-inline">{{ t('files.hint') }}</span>
+                </div>
+                <div id="files">{% include 'files.html.twig' %}</div>
+            </div>
+        </section>
     </div>
 </main>
 {% endblock %}

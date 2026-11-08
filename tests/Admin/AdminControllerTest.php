@@ -257,6 +257,36 @@ final class AdminControllerTest extends CommandTestCase
         self::assertSame('admin', $this->application->repository()->load()->file(1)?->uploadedBy);
     }
 
+    public function testTheFilePanelAndThumbnails(): void
+    {
+        $samples = new SampleFiles($this->temporaryDirectory() . '/uploads');
+        $repository = $this->application->fileRepository();
+        $repository->add($samples->image('png', 800, 600), 'Garden.png', 'admin');
+        $repository->add($samples->bytes('p.pdf', SampleFiles::pdf()), 'Prices [2027].pdf', 'admin');
+
+        self::assertSame(401, $this->get('/admin/files/1/thumbnail')->status);
+
+        $this->login();
+        $dashboard = $this->get('/admin')->body;
+        self::assertStringContainsString('data-reference="![](file:1)"', $dashboard);
+        self::assertStringContainsString('src="/admin/files/1/thumbnail"', $dashboard);
+        self::assertStringContainsString('data-reference="[Prices 2027.pdf](file:2)"', $dashboard);
+        self::assertMatchesRegularExpression('#/assets/admin/admin\.js(\?v=[0-9a-f]{8})?"#', $dashboard);
+
+        $thumbnail = $this->get('/admin/files/1/thumbnail');
+        self::assertSame(200, $thumbnail->status);
+        self::assertSame('image/png', $thumbnail->headers['Content-Type']);
+        self::assertNotNull($thumbnail->file);
+        self::assertSame([240, 180], array_slice((array) getimagesize($thumbnail->file), 0, 2));
+
+        self::assertSame(404, $this->get('/admin/files/2/thumbnail')->status);
+        self::assertSame(404, $this->get('/admin/files/9/thumbnail')->status);
+
+        $data = $this->json($this->runBatch('file delete 1'));
+        self::assertIsString($data['files_html']);
+        self::assertStringNotContainsString('file:1)', $data['files_html']);
+    }
+
     public function testUploadsNeedALoginAndTheCsrfToken(): void
     {
         $samples = new SampleFiles($this->temporaryDirectory() . '/uploads');

@@ -213,10 +213,10 @@ final class FileInspector
             unset($image); // GdImage objects are freed when released; imagedestroy() is deprecated since PHP 8.5
         }
 
-        return [$width, $height];
+        return ImageResizer::displaySize($path, $width, $height);
     }
 
-    private static function fitsInMemory(int $bytes): bool
+    public static function fitsInMemory(int $bytes): bool
     {
         $limit = (string) ini_get('memory_limit');
 

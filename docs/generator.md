@@ -59,7 +59,9 @@ Generated pages are listed in `var/cache-manifest.json`. Clearing the cache dele
 
 - Every batch that changes the website clears all generated pages (MVP rule; a change to a menu, a layout or the site name can affect every page). Smarter invalidation is on the roadmap.
 - `build` generates the published pages in every language right away, for example after a deployment; `build <page>` generates one page. It runs after the batch is written, so `set …` followed by `build` generates the new state.
-- `cache clear` deletes the generated pages.
+- `cache clear` deletes the generated pages and the published files.
+
+Published files (`/files/…`: image sizes, documents, media) have their own list, `var/files-manifest.json`, and are not cleared after every change; only the copies of files that were archived, purged or renamed are removed. See [files.md](files.md#on-the-website).
 
 Neither runs on a dry run or in a rejected batch.
 
@@ -83,7 +85,7 @@ Texts missing in a language fall back to the default language: page titles, menu
 
 ### Content
 
-Content is Markdown, converted with [league/commonmark](https://commonmark.thephpleague.com/). Raw HTML in content is escaped and unsafe links (`javascript:` and similar) are removed. Twig escapes every other value automatically. HTML content is planned for a later version.
+Content is Markdown, converted with [league/commonmark](https://commonmark.thephpleague.com/). Raw HTML in content is escaped and unsafe links (`javascript:` and similar) are removed. References to files (`![](file:12)`, `[text](file:13)`) become images with `srcset` and WebP, figures with captions, audio and video players or links; see [files.md](files.md#references-in-content). Twig escapes every other value automatically. HTML content is planned for a later version.
 
 ## Themes
 
@@ -99,6 +101,8 @@ app/themes/default/templates/     Twig templates
 public/assets/themes/default/     theme CSS
 public/assets/vendor/bootstrap/   Bootstrap 5.3.8 CSS and JS bundle (MIT)
 ```
+
+Templates link assets with `asset('path')`, which adds a version to the address (`/assets/themes/default/theme.css?v=1a2b3c4d`) that changes whenever the file does, so browsers load updated CSS and JavaScript without a forced reload.
 
 `site.theme` selects a theme by name; an unknown theme falls back to `default`. Templates are not editable through commands, so a theme can never become a way to run code.
 
