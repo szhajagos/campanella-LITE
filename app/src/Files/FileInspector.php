@@ -210,7 +210,7 @@ final class FileInspector
                 throw new FileRejected('file.damaged');
             }
 
-            imagedestroy($image);
+            unset($image); // GdImage objects are freed when released; imagedestroy() is deprecated since PHP 8.5
         }
 
         return [$width, $height];
