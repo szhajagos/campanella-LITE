@@ -10,6 +10,21 @@ Added, Changed, Deprecated, Removed, Fixed, Security.
 
 ## [Unreleased]
 
+### Added
+
+- AI users: `user ai create`, tokens (`user token create`, `user token revoke`), rights per command (`user allow`, `user deny`), approval settings (`user approval`), `user list`, `user delete`.
+- JSON API for AI users at `/api/v1` (`me`, `run`, `proposals`, `files`), authenticated with a bearer token.
+- Proposals: by default an AI user's changes wait for an administrator; the dashboard's *AI proposals* panel shows each batch with its dry run, to approve or reject. The command log names the approving admin.
+- Developer documentation: `docs/ai-users.md`.
+
+### Changed
+
+- The path segments `api`, `files` and `mcp` are reserved and cannot start an alias.
+
+### Security
+
+- API tokens are stored only as SHA-256 hashes, expire after 90 days by default and can be revoked; failed token sign-ins are throttled and logged. AI users cannot sign in to the dashboard and can never run `user` commands.
+
 ## [0.2.0] - 2026-11-08
 
 Files: images, documents, audio and video in one repository, uploaded in the dashboard and shown on the website.

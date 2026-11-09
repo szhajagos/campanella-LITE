@@ -58,7 +58,9 @@ final class LogCommand implements CommandHandler
                 LogEntry::UNDONE => new Message('log.action_undone', ['id' => $entry->undoes ?? '?']),
                 LogEntry::UPLOADED => new Message('log.action_uploaded'),
                 LogEntry::PURGED => new Message('log.action_purged'),
-                default => new Message('log.action_applied'),
+                default => $entry->approvedBy !== null
+                    ? new Message('log.action_approved', ['by' => $entry->approvedBy])
+                    : new Message('log.action_applied'),
             },
             (string) count($entry->files),
             $entry->summary(),

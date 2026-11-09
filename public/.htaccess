@@ -14,8 +14,13 @@ DirectorySlash Off
     # Hidden files are never served
     RewriteRule (^|/)\. - [F,L]
 
-    # The admin area
+    # Pass the Authorization header (API tokens) on to PHP
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # The admin area and the API for AI users
     RewriteRule ^admin(?:/.*)?$ admin/index.php [L]
+    RewriteRule ^api(?:/.*)?$ api/index.php [L]
 
     # Existing files: assets and generated pages
     RewriteCond %{REQUEST_FILENAME} -f

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Campanella\Lite\Admin;
 
 use Campanella\Lite\Admin\Session\Session;
+use Campanella\Lite\Ai\Proposal;
 use Campanella\Lite\Application;
 use Campanella\Lite\Command\Format\TextFormatter;
 use Campanella\Lite\Command\Handler\ListFilesCommand;
@@ -41,6 +42,8 @@ use Twig\TwigFunction;
  *     GET  /admin/preview/{id}[/{language}]  show any page, drafts included
  *     POST /admin/upload            add files to the file repository (multipart "files[]")
  *     GET  /admin/files/{id}/thumbnail  a small version of an image, archived ones included
+ *     POST /admin/proposals/{id}/approve  run a batch an AI user proposed
+ *     POST /admin/proposals/{id}/reject   turn it down (JSON: {"reason": "…"})
  *
  * While there is no admin user, /admin shows the first-time setup instead
  * (POST /admin/setup), protected by the setup key in config/setup-key.txt.
@@ -118,6 +121,7 @@ final class AdminController
             $path === '/admin/run' && $request->method === 'POST' => $this->run($request),
             $path === '/admin/upload' && $request->method === 'POST' => $this->upload($request),
             str_starts_with($path, '/admin/preview/') && in_array($request->method, ['GET', 'HEAD'], true) => $this->preview($path),
+            preg_match('#^/admin/proposals/([0-9-]+)/(approve|reject)$#', $path, $match) === 1 && $request->method === 'POST' => $this->decide($request, $match[1], $match[2]),
             preg_match('#^/admin/files/([1-9][0-9]{0,9})/thumbnail$#', $path, $match) === 1 && in_array($request->method, ['GET', 'HEAD'], true) => $this->thumbnail((int) $match[1]),
             default => Response::text("Not found.\n", 404),
         };
@@ -231,8 +235,89 @@ final class AdminController
             'pages_html' => $this->twig->render('pages.html.twig', $panels),
             'files_html' => $this->twig->render('files.html.twig', $panels),
             'history_html' => $this->twig->render('history.html.twig', $panels),
+            'proposals_html' => $this->twig->render('proposals.html.twig', $panels),
             'site_name' => $panels['site_name'],
         ]);
+    }
+
+    /**
+     * Approves or rejects a batch an AI user proposed.
+     */
+    private function decide(Request $request, string $id, string $action): Response
+    {
+        $admin = $this->currentUser();
+
+        if ($admin === null) {
+            return Response::json(['error' => 'not_logged_in'], 401);
+        }
+
+        if (!$this->validCsrf($request)) {
+            return Response::json(['error' => 'invalid_csrf_token'], 403);
+        }
+
+        $gateway = $this->app->aiGateway();
+        $proposal = $gateway->proposals()->find($id);
+        $ai = $proposal === null ? null : $this->users->find($proposal->user);
+        $error = match (true) {
+            $proposal === null => new Message('proposal.not_found', ['id' => $id]),
+            !$proposal->isPending() => new Message('proposal.decided', ['id' => $id, 'status' => $proposal->status]),
+            $ai === null || !$ai->isAi() => new Message('proposal.user_gone', ['id' => $id, 'user' => $proposal->user]),
+            default => null,
+        };
+
+        if ($error !== null || $proposal === null || $ai === null) {
+            $html = '<div class="response-line line-error">' . htmlspecialchars($this->translateMessage($error ?? new Message('proposal.not_found', ['id' => $id]))) . '</div>';
+            $result = null;
+        } elseif ($action === 'approve') {
+            $result = $gateway->approve($proposal, $ai, $admin);
+            $html = $this->twig->render('response.html.twig', $this->responseView($result) + ['locale' => $this->locale]);
+        } else {
+            $reason = $request->json()['reason'] ?? null;
+            $gateway->reject($proposal, $admin, is_string($reason) && trim($reason) !== '' ? mb_substr(trim($reason), 0, 500) : null);
+            $html = '<div class="response-line line-ok">' . htmlspecialchars($this->translateMessage(new Message('proposal.rejected', ['id' => $id, 'user' => $proposal->user]))) . '</div>';
+            $result = null;
+        }
+
+        $panels = $this->panels($admin->name);
+
+        return Response::json([
+            'ok' => $error === null && ($result === null || $result->isSuccess()),
+            'outcome' => $result?->outcome->value,
+            'html' => $html,
+            'status_html' => $this->twig->render('status.html.twig', $panels),
+            'pages_html' => $this->twig->render('pages.html.twig', $panels),
+            'files_html' => $this->twig->render('files.html.twig', $panels),
+            'history_html' => $this->twig->render('history.html.twig', $panels),
+            'proposals_html' => $this->twig->render('proposals.html.twig', $panels),
+            'site_name' => $panels['site_name'],
+        ]);
+    }
+
+    /**
+     * Pending proposals (all) and the latest decided ones, for the dashboard.
+     *
+     * @return array{pending: list<array<string, mixed>>, decided: list<array<string, mixed>>, ai_users: bool}
+     */
+    private function proposalList(): array
+    {
+        $store = $this->app->aiGateway()->proposals();
+        $view = fn (Proposal $proposal): array => [
+            'id' => $proposal->id,
+            'user' => $proposal->user,
+            'session' => $proposal->session,
+            'created' => substr(str_replace('T', ' ', $proposal->createdAt), 0, 16),
+            'batch' => $proposal->batch,
+            'preview' => $this->translateMessage($proposal->preview['summary']),
+            'status' => $proposal->status,
+            'decided_by' => $proposal->decidedBy,
+            'result' => $proposal->result === null ? null : $this->translateMessage($proposal->result['summary']),
+        ];
+
+        return [
+            'pending' => array_map($view, $store->list(pending: true, limit: 100)),
+            'decided' => array_map($view, $store->list(pending: false, limit: 5)),
+            'ai_users' => array_filter($this->users->all(), static fn (User $user): bool => $user->isAi()) !== [],
+        ];
     }
 
     /**
@@ -374,6 +459,7 @@ final class AdminController
             'text' => implode("\n", array_column($results, 'message')),
             'status_html' => $this->twig->render('status.html.twig', $panels),
             'files_html' => $this->twig->render('files.html.twig', $panels),
+            'proposals_html' => $this->twig->render('proposals.html.twig', $panels),
         ]);
     }
 
@@ -554,7 +640,7 @@ final class AdminController
         $seenAt = $this->session->get('seen_at');
         $user = $this->users->find($name);
 
-        if ($user === null || !is_int($loginAt) || !is_int($seenAt)
+        if ($user === null || !$user->isAdmin() || !is_int($loginAt) || !is_int($seenAt)
             || $now - $seenAt > self::IDLE_TIMEOUT || $now - $loginAt > self::MAX_LIFETIME) {
             $this->session->destroy();
 
@@ -606,7 +692,8 @@ final class AdminController
      */
     private function panels(string $user): array
     {
-        $panels = ['history' => $this->history->list($user), 'pages' => [], 'files' => [], 'status' => null, 'project_error' => null, 'site_name' => 'Campanella Lite', 'locale' => $this->locale];
+        $panels = ['history' => $this->history->list($user), 'pages' => [], 'files' => [], 'status' => null, 'project_error' => null, 'site_name' => 'Campanella Lite', 'locale' => $this->locale,
+            'proposals' => $this->proposalList()];
 
         try {
             $project = $this->app->repository()->load();
@@ -625,6 +712,7 @@ final class AdminController
             'generated' => count($this->app->pageCache()->files()),
             'languages' => implode(', ', $project->site->languages),
             'changed' => $this->lastChange(),
+            'proposals' => count($panels['proposals']['pending']),
         ];
         $panels['pages'] = $this->pageList($project);
         $panels['files'] = $this->fileList($project);

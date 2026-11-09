@@ -183,3 +183,14 @@
     color: var(--bs-secondary-color);
 }
 
+/* AI proposals waiting for approval */
+.proposal-batch {
+    max-height: 14rem;
+    overflow: auto;
+    padding: .5rem .75rem;
+    border-radius: var(--bs-border-radius);
+    background: var(--bs-tertiary-bg);
+    font-size: .8rem;
+    white-space: pre-wrap;
+}
+

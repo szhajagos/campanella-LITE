@@ -160,7 +160,7 @@ An alias:
 
 - starts with `/` and consists of one or more segments of lowercase ASCII letters and digits, words joined by single hyphens (`/about`, `/services/web-design`);
 - has no trailing slash, no accents, no uppercase letters;
-- does not start with a reserved segment: `admin`, `assets`, `node`, or any enabled language code (`/en/...`), which are kept free for language prefixes;
+- does not start with a reserved segment: `admin`, `api`, `assets`, `files`, `mcp`, `node`, or any enabled language code (`/en/...`), which are kept free for language prefixes;
 - is unique per language.
 
 ### Violation codes

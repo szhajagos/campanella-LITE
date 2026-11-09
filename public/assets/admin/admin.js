@@ -94,6 +94,7 @@
                 html += uploaded.html;
                 document.getElementById('status').innerHTML = uploaded.status_html;
                 document.getElementById('files').innerHTML = uploaded.files_html;
+                updateProposals(uploaded.proposals_html);
                 pending = pending.filter((file) => !files.includes(file));
                 renderAttachments();
             }
@@ -112,6 +113,7 @@
                 document.getElementById('status').innerHTML = data.status_html;
                 document.getElementById('pages').innerHTML = data.pages_html;
                 document.getElementById('files').innerHTML = data.files_html;
+                updateProposals(data.proposals_html);
                 historyBox.innerHTML = data.history_html;
                 document.getElementById('site-name').textContent = data.site_name;
                 historyIndex = -1;
@@ -183,6 +185,49 @@
         } else if (event.altKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
             event.preventDefault();
             recall(event.key === 'ArrowUp' ? 1 : -1);
+        }
+    });
+
+    function updateProposals(html) {
+        const box = document.getElementById('proposals');
+
+        if (box && typeof html === 'string') {
+            box.innerHTML = html;
+        }
+    }
+
+    // Approving or rejecting a batch an AI user proposed
+    document.getElementById('proposals')?.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-proposal]');
+
+        if (!button || button.disabled) {
+            return;
+        }
+
+        button.closest('.proposal').querySelectorAll('button').forEach((b) => { b.disabled = true; });
+        response.setAttribute('aria-busy', 'true');
+
+        try {
+            const data = await post('/admin/proposals/' + button.dataset.proposal + '/' + button.dataset.action, {
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+                body: '{}',
+            });
+
+            if (data === null) {
+                return;
+            }
+
+            response.innerHTML = data.html;
+            document.getElementById('status').innerHTML = data.status_html;
+            document.getElementById('pages').innerHTML = data.pages_html;
+            document.getElementById('files').innerHTML = data.files_html;
+            historyBox.innerHTML = data.history_html;
+            updateProposals(data.proposals_html);
+            document.getElementById('site-name').textContent = data.site_name;
+        } catch (error) {
+            response.textContent = String(error);
+        } finally {
+            response.removeAttribute('aria-busy');
         }
     });
 

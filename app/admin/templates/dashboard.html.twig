@@ -69,6 +69,16 @@
                 <div id="pages">{% include 'pages.html.twig' %}</div>
             </div>
         </section>
+        {% if proposals.ai_users or proposals.pending %}
+        <section class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="h6 mb-0">{{ t('dashboard.proposals') }}</h2>
+                </div>
+                <div id="proposals">{% include 'proposals.html.twig' %}</div>
+            </div>
+        </section>
+        {% endif %}
         <section class="col-12">
             <div class="card">
                 <div class="card-header d-flex align-items-center">

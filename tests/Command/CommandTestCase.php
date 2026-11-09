@@ -33,17 +33,17 @@ abstract class CommandTestCase extends TestCase
         $this->application = new Application(new Paths($root));
     }
 
-    protected function execute(string $input): BatchResult
+    protected function execute(string $input, ?string $user = null): BatchResult
     {
-        return $this->application->interpreter()->run($input);
+        return $this->application->interpreter()->run($input, false, $user);
     }
 
     /**
      * Runs a batch that must be applied and returns the project as it was written.
      */
-    protected function apply(string $input): Project
+    protected function apply(string $input, ?string $user = null): Project
     {
-        $result = $this->execute($input);
+        $result = $this->execute($input, $user);
         $text = $this->application->textFormatter()->format($result);
 
         self::assertSame(Outcome::Applied, $result->outcome, $text);
@@ -54,10 +54,10 @@ abstract class CommandTestCase extends TestCase
     /**
      * Runs a batch whose first failing line must report the given message key.
      */
-    protected function assertFails(string $input, string $key): void
+    protected function assertFails(string $input, string $key, ?string $user = null): void
     {
         $before = $this->project();
-        $result = $this->execute($input);
+        $result = $this->execute($input, $user);
         $failed = null;
 
         foreach ($result->lines as $line) {

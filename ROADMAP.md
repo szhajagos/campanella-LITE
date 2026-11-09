@@ -79,7 +79,7 @@ Built from the inside out: storage and command interpreter first, user interface
 
 ## 0.3.0 – AI users
 
-- [ ] **M9 – Users, rights and proposals:** user roles (admin, AI), AI users with tokens, per-command rights, a JSON API, the proposal queue with approval in the dashboard (on by default, switchable per AI user), log entries naming the AI and the approving admin.
+- [x] **M9 – Users, rights and proposals:** user roles (admin, AI), AI users with tokens, per-command rights, a JSON API, the proposal queue with approval in the dashboard (on by default, switchable per AI user), log entries naming the AI and the approving admin.
 - [ ] **M10 – MCP server:** `/mcp` endpoint (Streamable HTTP, MCP 2026-07-28) with tools for help, reading (`list`, `get`, `check`), dry runs, proposing batches, the state of proposals and file transfer; token authentication; a guide for connecting Claude (custom connector) and other MCP clients.
 
 ## After the MVP

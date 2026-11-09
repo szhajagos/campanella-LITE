@@ -59,7 +59,12 @@ final class Interpreter
     /**
      * @param string|null $user the admin running the batch, for commands about the user's own settings
      */
-    public function run(string $input, bool $dryRun = false, ?string $user = null): BatchResult
+    /**
+     * @param string|null                    $user       who runs the batch; null on the command line
+     * @param (\Closure(Signature): bool)|null $authorize decides which commands the user may run; null allows all
+     * @param string|null                    $approvedBy the admin who approved the batch, when it was proposed by an AI
+     */
+    public function run(string $input, bool $dryRun = false, ?string $user = null, ?\Closure $authorize = null, ?string $approvedBy = null): BatchResult
     {
         $batch = $this->parser->parse($input);
         $dryRun = $dryRun || $batch->dryRun;
@@ -72,10 +77,42 @@ final class Interpreter
             return new BatchResult(Outcome::Unchanged, [], new Message('batch.empty'), $dryRun);
         }
 
-        return $this->lock->synchronized(fn (): BatchResult => $this->execute($batch, $input, $dryRun, $user));
+        return $this->lock->synchronized(fn (): BatchResult => $this->execute($batch, $input, $dryRun, $user, $authorize, $approvedBy));
     }
 
-    private function execute(ParsedBatch $batch, string $input, bool $dryRun, ?string $user): BatchResult
+    /**
+     * The commands a batch consists of, without running it; null if the batch
+     * has a syntax error or an unknown command (running it reports which).
+     *
+     * @return list<Signature>|null
+     */
+    public function signatures(string $input): ?array
+    {
+        $batch = $this->parser->parse($input);
+
+        if (!$batch->isValid()) {
+            return null;
+        }
+
+        $signatures = [];
+
+        foreach ($batch->commands as $command) {
+            try {
+                [$handler] = $this->registry->resolve($command);
+            } catch (CommandFailed) {
+                return null;
+            }
+
+            $signatures[] = $handler->signature();
+        }
+
+        return $signatures;
+    }
+
+    /**
+     * @param (\Closure(Signature): bool)|null $authorize
+     */
+    private function execute(ParsedBatch $batch, string $input, bool $dryRun, ?string $user, ?\Closure $authorize, ?string $approvedBy): BatchResult
     {
         $standalone = $this->standalone($batch);
 
@@ -84,7 +121,7 @@ final class Interpreter
         }
 
         if ($standalone !== null) {
-            return $this->undo($standalone, $input, $dryRun, $user);
+            return $this->undo($standalone, $input, $dryRun, $user, $authorize, $approvedBy);
         }
 
         try {
@@ -111,6 +148,11 @@ final class Interpreter
 
             try {
                 [$handler, $invocation] = $this->registry->resolve($command);
+
+                if ($authorize !== null && !$authorize($invocation->signature)) {
+                    throw CommandFailed::because('command.not_allowed', ['command' => $invocation->signature->name, 'user' => $user ?? 'cli']);
+                }
+
                 $result = $handler->execute($invocation, $workspace);
 
                 if ($result->afterCommit !== null) {
@@ -164,7 +206,7 @@ final class Interpreter
         $this->repository->commit($workspace->project(), $changes);
         [$id, $time] = LogEntry::stamp();
         $this->undo?->record($id, $before, $changes, $time, $user, $input);
-        $this->log?->append(new LogEntry($id, $time, $user, LogEntry::APPLIED, $files, $input));
+        $this->log?->append(new LogEntry($id, $time, $user, LogEntry::APPLIED, $files, $input, approvedBy: $approvedBy));
 
         if ($this->onCommit !== null) {
             ($this->onCommit)($changes);
@@ -213,8 +255,10 @@ final class Interpreter
 
     /**
      * Puts back the files of the most recent applied batch.
+     *
+     * @param (\Closure(Signature): bool)|null $authorize
      */
-    private function undo(ParsedCommand $command, string $input, bool $dryRun, ?string $user): BatchResult
+    private function undo(ParsedCommand $command, string $input, bool $dryRun, ?string $user, ?\Closure $authorize, ?string $approvedBy): BatchResult
     {
         $fail = fn (string $key, array $params = []): BatchResult => new BatchResult(
             Outcome::Rejected,
@@ -227,6 +271,10 @@ final class Interpreter
             [, $invocation] = $this->registry->resolve($command);
         } catch (CommandFailed $failure) {
             return $fail($failure->reason->key, $failure->reason->params);
+        }
+
+        if ($authorize !== null && !$authorize($invocation->signature)) {
+            return $fail('command.not_allowed', ['command' => 'undo', 'user' => $user ?? 'cli']);
         }
 
         if ($this->undo === null) {
@@ -266,7 +314,7 @@ final class Interpreter
 
         $this->undo->restore($snapshot);
         [$id, $time] = LogEntry::stamp();
-        $this->log?->append(new LogEntry($id, $time, $user, LogEntry::UNDONE, $files, $input, $snapshot->id));
+        $this->log?->append(new LogEntry($id, $time, $user, LogEntry::UNDONE, $files, $input, $snapshot->id, $approvedBy));
 
         if ($this->onCommit !== null) {
             ($this->onCommit)([]);

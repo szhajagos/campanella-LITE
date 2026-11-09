@@ -6,5 +6,6 @@
     <span>{{ t('status.generated', {count: status.generated}) }}</span>
     <span>{{ t('status.languages', {languages: status.languages}) }}</span>
     {% if status.changed %}<span>{{ t('status.changed', {time: status.changed}) }}</span>{% endif %}
+    {% if status.proposals %}<span class="text-warning-emphasis fw-semibold">{{ t('status.proposals', {count: status.proposals}) }}</span>{% endif %}
 {% endif %}
 </div>

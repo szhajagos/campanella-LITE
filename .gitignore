@@ -11,11 +11,12 @@
 /config/
 
 # Generated pages in the web root; only the front controller, the admin
-# entry point, the Apache configuration and the assets belong to the repository
+# entry point, the API entry point, the Apache configuration and the assets belong to the repository
 /public/*
 !/public/index.php
 !/public/.htaccess
 !/public/admin/
+!/public/api/
 !/public/assets/
 
 # Files the Claude desktop app saves when it sends files (not part of the project)

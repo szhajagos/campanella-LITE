@@ -6,6 +6,9 @@ namespace Campanella\Lite;
 
 use Campanella\Lite\Admin\AdminController;
 use Campanella\Lite\Admin\AuthLog;
+use Campanella\Lite\Ai\AiGateway;
+use Campanella\Lite\Ai\ApiController;
+use Campanella\Lite\Ai\ProposalStore;
 use Campanella\Lite\Admin\History;
 use Campanella\Lite\Admin\LoginThrottle;
 use Campanella\Lite\Admin\Session\Session;
@@ -50,6 +53,13 @@ use Campanella\Lite\Command\Handler\File\FileRestoreCommand;
 use Campanella\Lite\Command\Handler\ListFilesCommand;
 use Campanella\Lite\Command\Handler\LogCommand;
 use Campanella\Lite\Command\Handler\UndoCommand;
+use Campanella\Lite\Command\Handler\User\UserAiCreateCommand;
+use Campanella\Lite\Command\Handler\User\UserApprovalCommand;
+use Campanella\Lite\Command\Handler\User\UserDeleteCommand;
+use Campanella\Lite\Command\Handler\User\UserListCommand;
+use Campanella\Lite\Command\Handler\User\UserRightsCommand;
+use Campanella\Lite\Command\Handler\User\UserTokenCreateCommand;
+use Campanella\Lite\Command\Handler\User\UserTokenRevokeCommand;
 use Campanella\Lite\Command\Handler\UserLocaleCommand;
 use Campanella\Lite\Command\Interpreter;
 use Campanella\Lite\Command\Log\CommandLog;
@@ -159,6 +169,32 @@ final class Application
         );
     }
 
+    /** What AI users can do, whichever way they connect. */
+    public function aiGateway(): AiGateway
+    {
+        return new AiGateway($this->interpreter(), new ProposalStore(new FileStore($this->paths->var())), $this->fileRepository());
+    }
+
+    /**
+     * The JSON API for AI users (/api/v1).
+     *
+     * @param (\Closure(): int)|null $clock
+     */
+    public function apiController(?\Closure $clock = null): ApiController
+    {
+        $var = new FileStore($this->paths->var());
+
+        return new ApiController(
+            $this->users(),
+            $this->aiGateway(),
+            new JsonFormatter($this->translator()),
+            $this->translator(),
+            new LoginThrottle($var),
+            new AuthLog($this->paths->var() . '/log/auth.log'),
+            $clock,
+        );
+    }
+
     public function installer(): Installer
     {
         return new Installer($this->paths);
@@ -238,6 +274,14 @@ final class Application
                 new FileRestoreCommand(),
                 new FilePurgeCommand($this->fileRepository()),
                 new UserLocaleCommand($this->users(), $this->translator()),
+                new UserListCommand($this->users()),
+                new UserAiCreateCommand($this->users(), $this->translator()),
+                new UserDeleteCommand($this->users()),
+                new UserTokenCreateCommand($this->users()),
+                new UserTokenRevokeCommand($this->users()),
+                new UserRightsCommand($this->users(), true),
+                new UserRightsCommand($this->users(), false),
+                new UserApprovalCommand($this->users()),
                 new PageCreateCommand(),
                 new PageDeleteCommand(),
                 new PageAliasCommand(),

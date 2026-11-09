@@ -37,6 +37,7 @@ final class LogEntry
         public readonly array $files,
         public readonly string $batch,
         public readonly ?string $undoes = null,
+        public readonly ?string $approvedBy = null,
     ) {
     }
 
@@ -56,6 +57,10 @@ final class LogEntry
 
         if ($this->undoes !== null) {
             $data['undoes'] = $this->undoes;
+        }
+
+        if ($this->approvedBy !== null) {
+            $data['approved_by'] = $this->approvedBy;
         }
 
         return $data;
@@ -83,6 +88,7 @@ final class LogEntry
             $files,
             is_string($data['batch'] ?? null) ? $data['batch'] : '',
             is_string($data['undoes'] ?? null) ? $data['undoes'] : null,
+            is_string($data['approved_by'] ?? null) ? $data['approved_by'] : null,
         );
     }
 

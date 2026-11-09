@@ -1,0 +1,33 @@
+{% if proposals.pending %}
+<ul class="list-unstyled mb-0">
+{% for proposal in proposals.pending %}
+    <li class="proposal p-3 border-bottom">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <strong>{{ proposal.user }}</strong>
+            <span class="small text-body-secondary">{{ proposal.session }} · {{ proposal.created }}</span>
+            <span class="ms-auto d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-success" data-proposal="{{ proposal.id }}" data-action="approve">{{ t('proposals.approve') }}</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" data-proposal="{{ proposal.id }}" data-action="reject">{{ t('proposals.reject') }}</button>
+            </span>
+        </div>
+        <pre class="proposal-batch mb-2">{{ proposal.batch }}</pre>
+        <div class="small"><span class="text-body-secondary">{{ t('proposals.preview') }}</span> {{ proposal.preview }}</div>
+    </li>
+{% endfor %}
+</ul>
+{% else %}
+<p class="text-body-secondary small m-3">{{ t('proposals.none') }}</p>
+{% endif %}
+{% if proposals.decided %}
+<details class="px-3 pb-3 small">
+    <summary class="text-body-secondary">{{ t('proposals.decided') }}</summary>
+    <ul class="list-unstyled mt-2 mb-0">
+    {% for proposal in proposals.decided %}
+        <li class="mb-1">
+            <span class="badge text-bg-{{ proposal.status == 'applied' ? 'success' : (proposal.status == 'rejected' ? 'secondary' : 'danger') }}">{{ t('proposals.status_' ~ proposal.status) }}</span>
+            {{ proposal.user }} · {{ proposal.created }} · {{ proposal.decided_by }}{% if proposal.result %} – {{ proposal.result }}{% endif %}
+        </li>
+    {% endfor %}
+    </ul>
+</details>
+{% endif %}

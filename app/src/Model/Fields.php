@@ -74,6 +74,21 @@ final class Fields
         return $this->has($key) ? $this->string($key) : null;
     }
 
+    public function optionalBool(string $key): ?bool
+    {
+        if (!$this->has($key)) {
+            return null;
+        }
+
+        $value = $this->data[$key];
+
+        if (!is_bool($value)) {
+            throw new InvalidDataException($this->source, 'expected true or false', $this->field($key));
+        }
+
+        return $value;
+    }
+
     public function int(string $key): int
     {
         $value = $this->required($key);

@@ -43,7 +43,7 @@ final class ProjectValidator
     public const RESERVED_COLUMN_NAMES = ['container'];
 
     /** First path segments owned by the system. Site language codes are reserved as well. */
-    public const RESERVED_SEGMENTS = ['admin', 'assets', 'node'];
+    public const RESERVED_SEGMENTS = ['admin', 'api', 'assets', 'files', 'mcp', 'node'];
 
     /** Menu targets: http(s) URLs, mailto: links or site-relative paths. */
     private const URL_PATTERN = '#^(?:https?://[^\s/$.?\#][^\s]*|mailto:[^\s]+|/[^\s]*)$#i';

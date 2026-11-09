@@ -112,6 +112,7 @@ Templates link assets with `asset('path')`, which adds a version to the address 
 
 `public/.htaccess` (needs `mod_rewrite`):
 
+- passes `/admin` to `admin/index.php` and `/api` to `api/index.php`, and the `Authorization` header (API tokens) on to PHP;
 - serves existing files (assets, generated pages) directly;
 - serves `/about` from `about/index.html` without redirecting to `/about/` (`DirectorySlash Off`);
 - sends everything else to `index.php`;

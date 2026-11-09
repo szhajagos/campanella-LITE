@@ -40,6 +40,7 @@ The rule that holds the design together: **the command interpreter is the only c
 | Undo snapshots, `undo` | `Campanella\Lite\Project\UndoHistory` | M6 | Done |
 | Installer, starters, web setup | `Campanella\Lite\Install` | M6 | Done |
 | File repository, uploads, `file` commands | `Campanella\Lite\Files` | M7 | Done |
+| AI users, rights, proposals, JSON API | `Campanella\Lite\Ai`, `Campanella\Lite\Admin` | M9 | Done |
 | Files on the website, image sizes, file panel, asset versions | `Campanella\Lite\Files`, `Campanella\Lite\Render\Markdown` | M8 | Done |
 
 ## Layers built in M1
@@ -127,6 +128,12 @@ Commands that touch files outside the project (`build`, `cache clear`) return de
 - **`PublicFiles`** knows every address a file is published at (`/files/{id}-{slug}[-{width}].{ext}`), makes the file behind an address on its first request (with `ImageResizer`, GD) and stores it through a second `PageCache` with its own manifest. `keeper()` tells which published copies are still current; the interpreter's commit hook prunes the others when a file changes.
 - **`FileEmbedder`** is a league/commonmark event listener: after a document is parsed, it replaces `file:` images with `EmbeddedFile`/`FileFigure` nodes carrying escaped HTML (pictures, players, links) and points `file:` links to the published address.
 - The front controller hands `/files/` addresses to `PublicFiles` before routing pages.
+
+### AI users (`Campanella\Lite\Ai`, M9)
+
+- `User` has a role (`admin`, `ai`); AI users carry tokens (`ApiToken`), rights and approval settings, all in `config/users.yaml`. `User::allows()` decides per command signature.
+- `Interpreter::run()` takes an `authorize` callback (checked for every command, `undo` included) and the name of the approving admin, which goes into the log entry. `Interpreter::signatures()` tells which commands a batch has without running it.
+- **`AiGateway`** is what every AI connection uses: it runs a batch at once or, when approval is needed, dry-runs it and stores a `Proposal` (`var/proposals/`); `approve()` runs the batch in the AI user's name with the admin as approver. `ApiController` (`/api/v1`, `public/api/index.php`) and the MCP server (M10) are thin layers on top of it.
 
 ### I18n (`Campanella\Lite\I18n`)
 

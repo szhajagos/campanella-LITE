@@ -306,6 +306,20 @@ Every applied batch is kept for `undo` and written to the command log. `undo` re
 undo
 ```
 
+## Users
+
+Only administrators (and the command line) can run these; AI users never. They change `config/users.yaml`, not the website, so they write after the batch and are not part of undo. See [ai-users.md](ai-users.md).
+
+| Command | Description |
+| --- | --- |
+| `user list` | Users with role, rights, approval settings and tokens. |
+| `user ai create <name> [--locale=<code>]` | Creates an AI user with the default rights; approval is on. |
+| `user token create <name> [--label=…] [--days=90]` | Creates a token and shows it once (`--days=0`: no expiry). |
+| `user token revoke <name> <token id>` | Revokes a token. |
+| `user allow <name> <command>`, `user deny <name> <command>` | Gives or takes away a right: a command or its first words (`content`, `page publish`). |
+| `user approval <name> on\|off [--for=<command>]` | Switches approval of the AI user's batches on or off, for everything or for some commands. |
+| `user delete <name>` | Deletes a user; not yourself, not the last administrator. |
+
 ## Your settings
 
 | Command | Description |
@@ -329,6 +343,7 @@ Responses use these key families; the full list with texts is in `app/translatio
 | `undo.*`, `log.*` | Undo and the command log |
 | `install.*` | Installer errors (web setup and `--init`) |
 | `file.*`, `upload.*` | Files and uploads |
+| `user.*`, `proposal.*`, `api.*` | Users, AI proposals and the API |
 
 ## Developer CLI
 
