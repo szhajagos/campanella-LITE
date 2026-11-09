@@ -17,6 +17,7 @@
 !/public/.htaccess
 !/public/admin/
 !/public/api/
+!/public/mcp/
 !/public/assets/
 
 # Files the Claude desktop app saves when it sends files (not part of the project)

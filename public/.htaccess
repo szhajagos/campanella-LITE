@@ -18,9 +18,10 @@ DirectorySlash Off
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # The admin area and the API for AI users
+    # The admin area, the API and the MCP server for AI users
     RewriteRule ^admin(?:/.*)?$ admin/index.php [L]
     RewriteRule ^api(?:/.*)?$ api/index.php [L]
+    RewriteRule ^mcp/?$ mcp/index.php [L]
 
     # Existing files: assets and generated pages
     RewriteCond %{REQUEST_FILENAME} -f

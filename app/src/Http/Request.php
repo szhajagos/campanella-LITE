@@ -28,7 +28,10 @@ final class Request
     ) {
     }
 
-    public static function fromGlobals(): self
+    /**
+     * @param int $maxBody the most bytes of the body that are read
+     */
+    public static function fromGlobals(int $maxBody = 1_048_576): self
     {
         $headers = [];
 
@@ -58,7 +61,7 @@ final class Request
             path: (string) parse_url($uri, PHP_URL_PATH),
             form: self::strings($_POST),
             headers: $headers,
-            body: (string) file_get_contents('php://input', length: 1_048_576),
+            body: (string) file_get_contents('php://input', length: max(1, $maxBody)),
             clientAddress: is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '',
             secure: is_string($https) && $https !== '' && strtolower($https) !== 'off',
             query: self::strings($_GET),

@@ -100,6 +100,26 @@ final class AiGateway
         return $this->files->add($path, $name, $ai->name);
     }
 
+    /**
+     * Whether every command of a batch only reads; null if the batch has a syntax error.
+     */
+    public function isReadOnly(string $commands): ?bool
+    {
+        $signatures = $this->interpreter->signatures($commands);
+
+        if ($signatures === null) {
+            return null;
+        }
+
+        foreach ($signatures as $signature) {
+            if (!$signature->readOnly) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public function proposals(): ProposalStore
     {
         return $this->proposals;

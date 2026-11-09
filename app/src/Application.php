@@ -8,7 +8,9 @@ use Campanella\Lite\Admin\AdminController;
 use Campanella\Lite\Admin\AuthLog;
 use Campanella\Lite\Ai\AiGateway;
 use Campanella\Lite\Ai\ApiController;
+use Campanella\Lite\Ai\McpServer;
 use Campanella\Lite\Ai\ProposalStore;
+use Campanella\Lite\Ai\TokenAuthenticator;
 use Campanella\Lite\Admin\History;
 use Campanella\Lite\Admin\LoginThrottle;
 use Campanella\Lite\Admin\Session\Session;
@@ -182,14 +184,33 @@ final class Application
      */
     public function apiController(?\Closure $clock = null): ApiController
     {
-        $var = new FileStore($this->paths->var());
+        return new ApiController($this->tokenAuthenticator($clock), $this->aiGateway(), new JsonFormatter($this->translator()), $this->translator());
+    }
 
-        return new ApiController(
-            $this->users(),
+    /**
+     * The MCP server for AI clients (/mcp).
+     *
+     * @param (\Closure(): int)|null $clock
+     */
+    public function mcpServer(?\Closure $clock = null): McpServer
+    {
+        return new McpServer(
+            $this->tokenAuthenticator($clock),
             $this->aiGateway(),
-            new JsonFormatter($this->translator()),
             $this->translator(),
-            new LoginThrottle($var),
+            new TextFormatter($this->translator()),
+            new JsonFormatter($this->translator()),
+        );
+    }
+
+    /**
+     * @param (\Closure(): int)|null $clock
+     */
+    private function tokenAuthenticator(?\Closure $clock): TokenAuthenticator
+    {
+        return new TokenAuthenticator(
+            $this->users(),
+            new LoginThrottle(new FileStore($this->paths->var())),
             new AuthLog($this->paths->var() . '/log/auth.log'),
             $clock,
         );

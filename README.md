@@ -108,6 +108,7 @@ Highlights:
 - `check`, `build`, `cache clear`, `undo` (up to 50 batches), `log` and `help` for maintenance.
 - A file repository for images, documents, audio and video: upload in the dashboard, then `list files`, `file describe`, `file rename`, `file delete` and refer to files in content as `![](file:12)`: images are published in several sizes and as WebP, without the location data of the original photos; audio and video get players.
 - AI users with their own tokens and narrower rights work through the same command language; by default their changes wait for an administrator's approval (see [docs/ai-users.md](docs/ai-users.md)).
+- An MCP server at `/mcp`: Claude (as a custom connector) or any other MCP client can read the site, try and propose changes and upload files (see [docs/mcp.md](docs/mcp.md)).
 - Every response is also available as JSON, which is the interface the future AI module will use.
 
 ## Data model

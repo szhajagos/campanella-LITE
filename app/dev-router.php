@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 /*
  * Router for PHP's built-in web server, for development only. It mirrors
- * public/.htaccess: /admin goes to the admin, /api to the API, files are served as they are,
+ * public/.htaccess: /admin goes to the admin, /api to the API, /mcp to the
+ * MCP server, files are served as they are,
  * generated pages from {path}/index.html, and everything else goes to the
  * front controller.
  *
@@ -16,6 +17,12 @@ $path = rawurldecode((string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_
 
 if ($path === '/api' || str_starts_with($path, '/api/')) {
     require $public . '/api/index.php';
+
+    return true;
+}
+
+if ($path === '/mcp' || $path === '/mcp/') {
+    require $public . '/mcp/index.php';
 
     return true;
 }

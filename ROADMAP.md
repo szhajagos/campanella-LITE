@@ -59,6 +59,7 @@ Status: **Accepted** = agreed and binding; **Proposed** = current plan, open to 
 | 2026-11-09 | AI | The AI works on the website as its own kind of user, with narrower, per-command rights, through the same command interpreter as an admin. Two ways in, in this order: first the AI connects to Campanella as an MCP server (any MCP client, e.g. a Claude connector), later a built-in assistant in the dashboard calls a model through an OpenAI-compatible API (a provider, an own server, or a local model through the admin's browser). | Accepted |
 | 2026-11-09 | AI | AI users sign in with a token (random, hashed, revocable, with an expiry date), sent as an `Authorization` header, not with a password and a cookie. A work session groups an AI's proposals for the log and the dashboard. OAuth can follow later. | Accepted |
 | 2026-11-09 | AI | By default an AI only proposes: its batches wait in a queue, with their dry-run result, until an admin approves or rejects them. An admin can switch approval off per AI user (and per command group). The log names both the AI and the approving admin. | Accepted |
+| 2026-11-09 | AI | The MCP server speaks MCP 2026-07-28 (stateless) and, for older clients, the 2025 handshake; it answers with JSON only, without sessions or streams. It offers seven tools on top of the same gateway as the JSON API, so rights and approval apply unchanged. Authentication is the AI user's token as a request header; OAuth can follow later. | Accepted |
 | 2026-11-07 | URLs | When an alias changes, the old alias redirects (301) to the page's current alias, until another page takes the old alias. Redirects point to page ids, so renaming twice never creates a chain. | Accepted |
 
 ## MVP (0.1.0, released 2026-11-08)
@@ -80,7 +81,7 @@ Built from the inside out: storage and command interpreter first, user interface
 ## 0.3.0 – AI users
 
 - [x] **M9 – Users, rights and proposals:** user roles (admin, AI), AI users with tokens, per-command rights, a JSON API, the proposal queue with approval in the dashboard (on by default, switchable per AI user), log entries naming the AI and the approving admin.
-- [ ] **M10 – MCP server:** `/mcp` endpoint (Streamable HTTP, MCP 2026-07-28) with tools for help, reading (`list`, `get`, `check`), dry runs, proposing batches, the state of proposals and file transfer; token authentication; a guide for connecting Claude (custom connector) and other MCP clients.
+- [x] **M10 – MCP server:** `/mcp` endpoint (Streamable HTTP, MCP 2026-07-28) with tools for help, reading (`list`, `get`, `check`), dry runs, proposing batches, the state of proposals and file transfer; token authentication; a guide for connecting Claude (custom connector) and other MCP clients.
 
 ## After the MVP
 

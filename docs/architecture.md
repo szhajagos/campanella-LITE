@@ -133,7 +133,8 @@ Commands that touch files outside the project (`build`, `cache clear`) return de
 
 - `User` has a role (`admin`, `ai`); AI users carry tokens (`ApiToken`), rights and approval settings, all in `config/users.yaml`. `User::allows()` decides per command signature.
 - `Interpreter::run()` takes an `authorize` callback (checked for every command, `undo` included) and the name of the approving admin, which goes into the log entry. `Interpreter::signatures()` tells which commands a batch has without running it.
-- **`AiGateway`** is what every AI connection uses: it runs a batch at once or, when approval is needed, dry-runs it and stores a `Proposal` (`var/proposals/`); `approve()` runs the batch in the AI user's name with the admin as approver. `ApiController` (`/api/v1`, `public/api/index.php`) and the MCP server (M10) are thin layers on top of it.
+- **`AiGateway`** is what every AI connection uses: it runs a batch at once or, when approval is needed, dry-runs it and stores a `Proposal` (`var/proposals/`); `approve()` runs the batch in the AI user's name with the admin as approver. `ApiController` (`/api/v1`, `public/api/index.php`) and `McpServer` (`/mcp`, `public/mcp/index.php`) are thin layers on top of it; both sign in through `TokenAuthenticator` (token lookup, throttling, auth log).
+- **`McpServer`** answers JSON-RPC over POST: the stateless MCP 2026-07-28 (`server/discover`, `tools/list`, `tools/call`, headers checked against the body) and the 2025 handshake (`initialize`). Its seven tools map to `AiGateway`; results carry the text formatter's output plus the JSON form as `structuredContent`.
 
 ### I18n (`Campanella\Lite\I18n`)
 

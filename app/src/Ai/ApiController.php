@@ -5,10 +5,7 @@ declare(strict_types=1);
 namespace Campanella\Lite\Ai;
 
 use Campanella\Lite\Admin\ApiToken;
-use Campanella\Lite\Admin\AuthLog;
-use Campanella\Lite\Admin\LoginThrottle;
 use Campanella\Lite\Admin\User;
-use Campanella\Lite\Admin\UserRepository;
 use Campanella\Lite\Command\Format\JsonFormatter;
 use Campanella\Lite\Files\FileRejected;
 use Campanella\Lite\Http\Request;
@@ -42,13 +39,10 @@ final class ApiController
     ];
 
     public function __construct(
-        private readonly UserRepository $users,
+        private readonly TokenAuthenticator $authenticator,
         private readonly AiGateway $gateway,
         private readonly JsonFormatter $formatter,
         private readonly Translator $translator,
-        private readonly LoginThrottle $throttle,
-        private readonly AuthLog $log,
-        private readonly ?\Closure $clock = null,
     ) {
     }
 
@@ -59,26 +53,17 @@ final class ApiController
 
     private function dispatch(Request $request): Response
     {
-        $now = $this->clock !== null ? ($this->clock)() : time();
-        $address = $request->clientAddress;
-        $retryAfter = $this->throttle->retryAfter($address, $now);
+        $now = $this->authenticator->now();
+        $retryAfter = $this->authenticator->retryAfter($request);
 
         if ($retryAfter > 0) {
             return $this->error(429, 'api.too_many_attempts', ['minutes' => (int) ceil($retryAfter / 60)], User::DEFAULT_LOCALE)
                 ->withHeaders(['Retry-After' => (string) $retryAfter]);
         }
 
-        $header = $request->header('authorization') ?? '';
-        $found = str_starts_with($header, 'Bearer ')
-            ? $this->users->findByToken(substr($header, 7), (new \DateTimeImmutable())->setTimestamp($now))
-            : null;
+        $found = $this->authenticator->authenticate($request);
 
         if ($found === null) {
-            if ($header !== '') {
-                $this->throttle->recordFailure($address, $now);
-                $this->log->record('api_token_failed', ApiToken::parse(substr($header, 7))[0] ?? '-', $address, $now);
-            }
-
             return $this->error(401, 'api.unauthorized', [], User::DEFAULT_LOCALE)
                 ->withHeaders(['WWW-Authenticate' => 'Bearer realm="Campanella Lite"']);
         }

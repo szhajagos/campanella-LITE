@@ -2,7 +2,7 @@
 
 An AI works on the website the way an administrator does: through the command language, the same interpreter, the same validation, log and undo. It signs in as an **AI user**, which has narrower rights than an administrator, and by default its changes are **proposals** that an administrator approves in the dashboard.
 
-How the AI connects is a separate question. Milestone 9 provides the JSON API described here; milestone 10 adds an MCP server on top of it, so that AI assistants such as a Claude custom connector can use Campanella directly.
+How the AI connects is a separate question. There are two ways in, both with the same rights and approval: the JSON API described here, and the MCP server described in [mcp.md](mcp.md), through which AI assistants such as a Claude custom connector use Campanella directly.
 
 ## Setting up an AI user
 
