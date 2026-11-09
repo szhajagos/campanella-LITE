@@ -258,30 +258,30 @@ final class AdminController
         $gateway = $this->app->aiGateway();
         $proposal = $gateway->proposals()->find($id);
         $ai = $proposal === null ? null : $this->users->find($proposal->user);
-        $error = match (true) {
-            $proposal === null => new Message('proposal.not_found', ['id' => $id]),
-            !$proposal->isPending() => new Message('proposal.decided', ['id' => $id, 'status' => $proposal->status]),
-            $ai === null || !$ai->isAi() => new Message('proposal.user_gone', ['id' => $id, 'user' => $proposal->user]),
-            default => null,
-        };
+        $result = null;
+        $ok = false;
 
-        if ($error !== null || $proposal === null || $ai === null) {
-            $html = '<div class="response-line line-error">' . htmlspecialchars($this->translateMessage($error ?? new Message('proposal.not_found', ['id' => $id]))) . '</div>';
-            $result = null;
+        if ($proposal === null) {
+            $html = $this->errorLine(new Message('proposal.not_found', ['id' => $id]));
+        } elseif (!$proposal->isPending()) {
+            $html = $this->errorLine(new Message('proposal.decided', ['id' => $id, 'status' => $proposal->status]));
+        } elseif ($ai === null || !$ai->isAi()) {
+            $html = $this->errorLine(new Message('proposal.user_gone', ['id' => $id, 'user' => $proposal->user]));
         } elseif ($action === 'approve') {
             $result = $gateway->approve($proposal, $ai, $admin);
+            $ok = $result->isSuccess();
             $html = $this->twig->render('response.html.twig', $this->responseView($result) + ['locale' => $this->locale]);
         } else {
+            $ok = true;
             $reason = $request->json()['reason'] ?? null;
             $gateway->reject($proposal, $admin, is_string($reason) && trim($reason) !== '' ? mb_substr(trim($reason), 0, 500) : null);
             $html = '<div class="response-line line-ok">' . htmlspecialchars($this->translateMessage(new Message('proposal.rejected', ['id' => $id, 'user' => $proposal->user]))) . '</div>';
-            $result = null;
         }
 
         $panels = $this->panels($admin->name);
 
         return Response::json([
-            'ok' => $error === null && ($result === null || $result->isSuccess()),
+            'ok' => $ok,
             'outcome' => $result?->outcome->value,
             'html' => $html,
             'status_html' => $this->twig->render('status.html.twig', $panels),
@@ -291,6 +291,11 @@ final class AdminController
             'proposals_html' => $this->twig->render('proposals.html.twig', $panels),
             'site_name' => $panels['site_name'],
         ]);
+    }
+
+    private function errorLine(Message $message): string
+    {
+        return '<div class="response-line line-error">' . htmlspecialchars($this->translateMessage($message)) . '</div>';
     }
 
     /**
