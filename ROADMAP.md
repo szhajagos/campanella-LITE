@@ -56,6 +56,9 @@ Status: **Accepted** = agreed and binding; **Proposed** = current plan, open to 
 | 2026-11-08 | Files | Allowed: images (JPEG, PNG, WebP, GIF), PDF, Office documents (DOCX, XLSX, PPTX), audio (WAV, AIFF, FLAC, MP3, Opus, Ogg), video (MP4, WebM). Never files that can carry scripts or macros (DOCM/XLSM/PPTM, legacy DOC/XLS/PPT, HTML, PHP). The type is checked from the content, not the extension. Limits: 10 MB, video 100 MB. | Accepted |
 | 2026-11-08 | Files | SVG only later, if at all: the established PHP sanitiser is GPL-licensed, so it would need an own strict allowlist check that refuses anything else, plus a sandboxing Content-Security-Policy on served SVG files. Not in 0.2.0. | Accepted |
 | 2026-11-08 | Files | Image sizes and WebP are derived files, not separate files: one id per upload. They are generated from the original (with GD, which also drops EXIF and GPS data) into the public directory, can always be regenerated, and are never stored in the manifest. Content uses `file:1042`; the generator picks the sizes (`srcset`, `<picture>` with WebP when the server supports it). | Accepted |
+| 2026-11-09 | AI | The AI works on the website as its own kind of user, with narrower, per-command rights, through the same command interpreter as an admin. Two ways in, in this order: first the AI connects to Campanella as an MCP server (any MCP client, e.g. a Claude connector), later a built-in assistant in the dashboard calls a model through an OpenAI-compatible API (a provider, an own server, or a local model through the admin's browser). | Accepted |
+| 2026-11-09 | AI | AI users sign in with a token (random, hashed, revocable, with an expiry date), sent as an `Authorization` header, not with a password and a cookie. A work session groups an AI's proposals for the log and the dashboard. OAuth can follow later. | Accepted |
+| 2026-11-09 | AI | By default an AI only proposes: its batches wait in a queue, with their dry-run result, until an admin approves or rejects them. An admin can switch approval off per AI user (and per command group). The log names both the AI and the approving admin. | Accepted |
 | 2026-11-07 | URLs | When an alias changes, the old alias redirects (301) to the page's current alias, until another page takes the old alias. Redirects point to page ids, so renaming twice never creates a chain. | Accepted |
 
 ## MVP (0.1.0, released 2026-11-08)
@@ -74,11 +77,16 @@ Built from the inside out: storage and command interpreter first, user interface
 - [x] **M7 – File repository:** manifest and storage, numeric ids, type and size checks, upload in the admin (drag and drop into the command box, response with the file's data) and on the CLI, `list files` with filters, `get`/`set`, `file describe`, `file rename`, `file delete` (archive), `file purge`, undo of file commands, reference checks.
 - [x] **M8 – Files on the website:** `file:{id}` in Markdown, rendering per type (image with alt text and caption, audio, video, download link), image sizes and WebP with GD, file panel with thumbnails in the admin, versioned asset URLs (no more Ctrl+F5 after updates).
 
+## 0.3.0 – AI users
+
+- [ ] **M9 – Users, rights and proposals:** user roles (admin, AI), AI users with tokens, per-command rights, a JSON API, the proposal queue with approval in the dashboard (on by default, switchable per AI user), log entries naming the AI and the approving admin.
+- [ ] **M10 – MCP server:** `/mcp` endpoint (Streamable HTTP, MCP 2026-07-28) with tools for help, reading (`list`, `get`, `check`), dry runs, proposing batches, the state of proposals and file transfer; token authentication; a guide for connecting Claude (custom connector) and other MCP clients.
+
 ## After the MVP
 
 Not yet scheduled; order to be decided.
 
-- **AI module:** model adapter with exchangeable models (local or remote), natural language to command batches, approval workflow, maintenance suggestions. Preferred models are openly available under MIT or Apache 2.0.
+- **Built-in AI assistant (0.4.0):** a box in the dashboard that turns plain language into command batches through an OpenAI-compatible API (provider, own server, or a local model through the browser); maintenance suggestions. Preferred models are openly available under MIT or Apache 2.0.
 - **Multilingual websites:** language URL prefixes, translation workflow, language switcher.
 - **More message translations** besides English and Hungarian.
 - **HTML content** alongside Markdown.
